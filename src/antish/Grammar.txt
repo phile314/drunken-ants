@@ -1,0 +1,89 @@
+--- questions
+-- lexer or no lexer?
+-- parsinglib or parsec ?
+-- happy or alex?
+/*
+--Builtin Functions
+
+mark
+unmark
+pickup
+drop
+turn
+move
+
+--Builtin Values
+
+
+*/
+
+--Grammar
+
+Program = stmBlock'
+
+
+stmBlock = stm | "{" stmBlock' "}"
+stmBlock' =
+    stm NEWLINE {stm NEWLINE}
+
+stm =
+    funCall
+  | "if" expr "then" stmBlock ["else" stmBlock]
+  | "for" [var "in"] expr stmBlock
+  | "try" stmBlock "with" stmBlock ["catch" stmBlock]
+  | "let" binding {NEWLINE binding} "in" stmBlock
+  | "with" "probability" DOUBLE "do" stmBlock "otherwise" stmBlock
+
+binding =
+    identifier "=" expr
+  | identifier {var} "=" stmBlock
+
+funCall =
+    identifier [expr {expr}]
+
+bexpr =
+    scond sdir
+  | expr "&&" expr
+  | expr "||" expr
+
+scond =
+    Friend
+  | Foe
+  | FriendWithFood
+  | FoeWithFood
+  | Food
+  | Rock
+  | Marker iexpr
+  | FoeMarker
+  | Home
+  | FoeHome
+
+sdir =
+    Here
+  | Ahead
+  | LeftAhead
+  | RightAhead
+
+expr =
+  | lexpr
+  | iexpr
+  | bexpr
+  | turnDir
+  | funCall
+
+
+turnDir = Left | Right
+
+lexpr =
+    "[" expr ".." expr "]"
+  | "[" expr { "," expr} "]"
+
+
+iexpr =
+    INTEGER
+  | var
+
+var =
+    identifier
+
+-- identifier: [a-z]([A-z0-9])*
