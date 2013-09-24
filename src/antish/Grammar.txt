@@ -46,6 +46,7 @@ bexpr =
   | expr "&&" expr
   | expr "||" expr
 
+-- We could also implement this by defining all these values as built-in functions?
 scond =
     Friend
   | Foe
@@ -70,6 +71,7 @@ expr =
   | bexpr
   | turnDir
   | funCall
+  | "(" expr ")"
 
 
 turnDir = Left | Right
