@@ -4,45 +4,51 @@ module Tokens where
 
 %wrapper "basic"
 
+$newline	= [\r\n]
 $digit 		= 0-9
 $alpha 		= [a-zA-Z]
-$dot		= [\.]
+$point		= [\.]
 $comma		= [\,]
 
 tokens :-
+	$newline+		{ \s -> NewLine			}
 	$white+			;
 	"--".*			;
 	
-	$dot			{ \s -> Dot		}
-	$comma			{ \s -> Comma 		}
+	$comma			{ \s -> Comma			}
 
 	"if"			{ \s -> TokenIF 		}
-	"else"			{ \s -> TokenELSE		}
 	"then"			{ \s -> TokenTHEN 		}
+	"else"			{ \s -> TokenELSE		}
 	"for"			{ \s -> TokenFOR		}
 	"in"			{ \s -> TokenIN			}
+	"try"			{ \s -> TokenTRY		}
 	"with"			{ \s -> TokenWITH		}
+	"catch"			{ \s -> TokenCATCH		}
 	"let"			{ \s -> TokenLET		}
 	"probability"		{ \s -> TokenPROBABILITY	}
 	"do"			{ \s -> TokenDO			}
 	"otherwise"		{ \s -> TokenOTHERWISE		}
-	"eq"			{ \s -> TokenEQ			}
+	"="			{ \s -> TokenDEF		}
 
-	"{"			{ \s -> TokenLBRACE		}
-	"}"			{ \s -> TokenRBRACE		}
-	"["			{ \s -> TokenLBRACKET		}
-	"]"			{ \s -> TokenRBRACKET		}
-	"("			{ \s -> TokenLPAREN		}
-	")"			{ \s -> TokenRPAREN		}
+	"&&"			{ \s -> TokenAND		}
+	"||"			{ \s -> TokenOR			}
 
-	[\_]			{ \s -> TokenUnderscore	}
+	[\{]			{ \s -> TokenLBRACE		}
+	[\}]			{ \s -> TokenRBRACE		}
+	[\[]			{ \s -> TokenLBRACKET		}
+	[\]]			{ \s -> TokenRBRACKET		}
+	[\(]			{ \s -> TokenLPAREN		}
+	[\)]			{ \s -> TokenRPAREN		}
 
-	[$alpha $digit \+ \-]+	{ \s -> TokenIdent s		}
+	[a-z][$alpha $digit]*	{ \s -> TokenIdent s		}
+	$digit+			{ \s -> TokenInt i		}
+	[$digit]*$point[$digit]+ { \s -> TokenDouble d		}
 {
 -- Each action has type :: String -> Token
 -- The token type:
 data Token
-  = Dot
+  = NewLine
   | Comma
   | TokenNEWLINE
   | TokenIF
@@ -52,11 +58,14 @@ data Token
   | TokenIN
   | TokenTRY
   | TokenWITH
+  | TokenCATCH
   | TokenLET
   | TokenPROBABILITY
   | TokenDO
   | TokenOTHERWISE
-  | TokenEQ
+  | TokenDEF
+  | TokenAND
+  | TokenOR
   | TokenLBRACE
   | TokenRBRACE
   | TokenLBRACKET
@@ -64,6 +73,8 @@ data Token
   | TokenLPAREN
   | TokenRPAREN
   | TokenIdent String
+  | TokenInt Int
+  | TokenDouble Double
   deriving (Eq, Show)
 	
 main = do
