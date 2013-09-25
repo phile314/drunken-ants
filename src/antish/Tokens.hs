@@ -18,8 +18,40 @@ import Char (ord)
 #endif
 {-# LINE 1 "templates/wrappers.hs" #-}
 {-# LINE 1 "templates/wrappers.hs" #-}
-{-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command-line>" #-}
+
+
+
+
+
+
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 6 "<command-line>" 2
 {-# LINE 1 "templates/wrappers.hs" #-}
 -- -----------------------------------------------------------------------------
 -- Alex wrapper code.
@@ -60,13 +92,13 @@ type Byte = Word8
 -- -----------------------------------------------------------------------------
 -- The input type
 
-{-# LINE 71 "templates/wrappers.hs" #-}
+{-# LINE 72 "templates/wrappers.hs" #-}
 
-{-# LINE 88 "templates/wrappers.hs" #-}
+{-# LINE 89 "templates/wrappers.hs" #-}
 
-{-# LINE 102 "templates/wrappers.hs" #-}
+{-# LINE 103 "templates/wrappers.hs" #-}
 
-{-# LINE 117 "templates/wrappers.hs" #-}
+{-# LINE 118 "templates/wrappers.hs" #-}
 
 -- -----------------------------------------------------------------------------
 -- Token positions
@@ -78,18 +110,18 @@ type Byte = Word8
 -- `move_pos' calculates the new position after traversing a given character,
 -- assuming the usual eight character tab stops.
 
-{-# LINE 140 "templates/wrappers.hs" #-}
+{-# LINE 141 "templates/wrappers.hs" #-}
 
 -- -----------------------------------------------------------------------------
 -- Default monad
 
-{-# LINE 230 "templates/wrappers.hs" #-}
+{-# LINE 231 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Monad (with ByteString input)
 
-{-# LINE 319 "templates/wrappers.hs" #-}
+{-# LINE 320 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -121,9 +153,9 @@ alexGetByte (_,[],(c:s)) = case utf8Encode c of
 -- -----------------------------------------------------------------------------
 -- Basic wrapper, ByteString version
 
-{-# LINE 363 "templates/wrappers.hs" #-}
+{-# LINE 364 "templates/wrappers.hs" #-}
 
-{-# LINE 376 "templates/wrappers.hs" #-}
+{-# LINE 377 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -131,13 +163,13 @@ alexGetByte (_,[],(c:s)) = case utf8Encode c of
 
 -- Adds text positions to the basic model.
 
-{-# LINE 393 "templates/wrappers.hs" #-}
+{-# LINE 394 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Posn wrapper, ByteString version
 
-{-# LINE 408 "templates/wrappers.hs" #-}
+{-# LINE 409 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -225,12 +257,43 @@ alex_action_22 =  \s -> TokenRBRACKET
 alex_action_23 =  \s -> TokenLPAREN		
 alex_action_24 =  \s -> TokenRPAREN		
 alex_action_25 =  \s -> TokenIdent s		
-alex_action_26 =  \s -> TokenInt i		
-alex_action_27 =  \s -> TokenDouble d		
+alex_action_26 =  \s -> TokenInt (read s)	
+alex_action_27 =  \s -> TokenDouble (read s)
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
-{-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command-line>" #-}
+
+
+
+
+
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 5 "<command-line>" 2
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------
 -- ALEX TEMPLATE

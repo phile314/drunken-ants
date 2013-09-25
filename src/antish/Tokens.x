@@ -42,8 +42,8 @@ tokens :-
 	[\)]			{ \s -> TokenRPAREN		}
 
 	[a-z][$alpha $digit]*	{ \s -> TokenIdent s		}
-	$digit+			{ \s -> TokenInt i		}
-	[$digit]*$point[$digit]+ { \s -> TokenDouble d		}
+	$digit+			        { \s -> TokenInt (read s)	}
+	[$digit]*$point[$digit]+ { \s -> TokenDouble (read s)}
 {
 -- Each action has type :: String -> Token
 -- The token type:
