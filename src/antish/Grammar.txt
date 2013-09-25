@@ -31,7 +31,7 @@ stm =
   | "if" expr "then" stmBlock ["else" stmBlock]
   | "for" [var "in"] expr stmBlock
   | "try" stmBlock "with" stmBlock ["catch" stmBlock]
-  | "let" binding {NEWLINE binding} "in" stmBlock
+  | "let" binding {COMMA NEWLINE binding} "in" stmBlock
   | "with" "probability" DOUBLE "do" stmBlock "otherwise" stmBlock
 
 binding =
