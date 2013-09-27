@@ -1,9 +1,9 @@
 let turnBack = 
-  for [1..6] turn   -- [from..to] is not accepted by the lexer
+  for [1..3] turn   -- [from..to] is not accepted by the lexer
 
 let goHome =
   move
-  if !(Here, Home) then goHome    -- Capitalized tokens are refused
+  if !(Home Here) then goHome
    
 
 let findFood = {

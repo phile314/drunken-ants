@@ -1,9 +1,9 @@
 let turnBack = 
-  for [1,2,3,4,5,6] turn
+  for [1,2,3] turn
 
 let goHome = {
   move
-  if !(here, home) then goHome
+  if ! (Home Here) then goHome
 }
 
 let findFood = {
