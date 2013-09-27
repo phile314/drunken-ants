@@ -33,6 +33,7 @@ tokens :-
 
 	"&&"			{ \s -> TokenAND		}
 	"||"			{ \s -> TokenOR			}
+  "!"       { \_ -> TokenNOT    }
 
 	[\{]			{ \s -> TokenLBRACE		}
 	[\}]			{ \s -> TokenRBRACE		}
@@ -66,6 +67,7 @@ data Token
   | TokenDEF
   | TokenAND
   | TokenOR
+  | TokenNOT
   | TokenLBRACE
   | TokenRBRACE
   | TokenLBRACKET
