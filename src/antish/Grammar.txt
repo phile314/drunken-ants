@@ -24,7 +24,7 @@ Program = stmBlock'
 
 stmBlock = stm | "{" stmBlock' "}"
 stmBlock' =
-    stm NEWLINE {stm NEWLINE}
+    stm {NEWLINE stm}
 
 stm =
     funCall
