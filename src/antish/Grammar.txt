@@ -39,7 +39,11 @@ binding =
   | identifier {var} "=" stmBlock
 
 funCall =
-    identifier [expr {expr}]
+    funIdentifier [expr {expr}]
+
+funIdentifier =
+    identifier
+  | constIdentifier
 
 bexpr =
     scond sdir
@@ -69,12 +73,9 @@ expr =
   | lexpr
   | iexpr
   | bexpr
-  | turnDir
   | funCall
   | "(" expr ")"
 
-
-turnDir = Left | Right
 
 lexpr =
     "[" expr ".." expr "]"
