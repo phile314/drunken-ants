@@ -1,4 +1,5 @@
-Add Comments
 Built in functions (move mark etc...) should be tokenized as function calls not as identifiers (TokenIdent)
+
+Capitalized tokens are refused (Here, Home ...) : we should decide how to handle them.
 
 I don't think we should track Tokens.hs (it's just generated code...)
