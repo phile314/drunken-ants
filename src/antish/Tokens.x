@@ -31,9 +31,10 @@ tokens :-
 	"otherwise"		{ \s -> TokenOTHERWISE		}
 	"="			{ \s -> TokenDEF		}
 
-	"&&"			{ \s -> TokenAND		}
-	"||"			{ \s -> TokenOR			}
-  "!"       { \_ -> TokenNOT    }
+--    [\[]] $digit+ ".." $digit+ [\]            { \s -> TokenFromTo  }
+    "&&"			{ \s -> TokenAND		}
+    "||"			{ \s -> TokenOR			}
+    "!"       { \_ -> TokenNOT    }
 
 	[\{]			{ \s -> TokenLBRACE		}
 	[\}]			{ \s -> TokenRBRACE		}
@@ -42,7 +43,8 @@ tokens :-
 	[\(]			{ \s -> TokenLPAREN		}
 	[\)]			{ \s -> TokenRPAREN		}
 
-	[a-z][$alpha $digit]*	{ \s -> TokenIdent s		}
+    [A-Z][$alpha $digit]*   { \s -> TokenConst s }
+	[a-z][$alpha $digit]*	{ \s -> TokenIdent s }
 	$digit+			        { \s -> TokenInt (read s)	}
 	[$digit]*$point[$digit]+ { \s -> TokenDouble (read s)}
 {
@@ -65,6 +67,7 @@ data Token
   | TokenDO
   | TokenOTHERWISE
   | TokenDEF
+--  | TokenFROM_TO
   | TokenAND
   | TokenOR
   | TokenNOT
@@ -74,6 +77,7 @@ data Token
   | TokenRBRACKET
   | TokenLPAREN
   | TokenRPAREN
+  | TokenConst String
   | TokenIdent String
   | TokenInt Int
   | TokenDouble Double
