@@ -4,10 +4,9 @@ module Ast where
 
 type Identifier = String
 
-
 data Program = Program StmBlock
 
-data StmBlock = [Statement]
+data StmBlock = StmBlock [Statement]
 
 data Statement =
     FunCall FunIdentifier [Expr]
