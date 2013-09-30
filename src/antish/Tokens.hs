@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LINE 1 "Tokens.x" #-}
 
-module Tokens where
+module Lexer where
 
 #if __GLASGOW_HASKELL__ >= 603
 #include "ghcconfig.h"
@@ -16,18 +16,42 @@ import Data.Array.Base (unsafeAt)
 import Array
 import Char (ord)
 #endif
-#if __GLASGOW_HASKELL__ >= 503
-import System.IO
-import System.IO.Unsafe
-import Debug.Trace
-#else
-import IO
-import IOExts
-#endif
 {-# LINE 1 "templates/wrappers.hs" #-}
 {-# LINE 1 "templates/wrappers.hs" #-}
-{-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command-line>" #-}
+
+
+
+
+
+
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 6 "<command-line>" 2
 {-# LINE 1 "templates/wrappers.hs" #-}
 -- -----------------------------------------------------------------------------
 -- Alex wrapper code.
@@ -68,7 +92,25 @@ type Byte = Word8
 -- -----------------------------------------------------------------------------
 -- The input type
 
-{-# LINE 72 "templates/wrappers.hs" #-}
+
+type AlexInput = (AlexPosn,     -- current position,
+                  Char,         -- previous char
+                  [Byte],       -- pending bytes on current char
+                  String)       -- current input string
+
+ignorePendingBytes :: AlexInput -> AlexInput
+ignorePendingBytes (p,c,ps,s) = (p,c,[],s)
+
+alexInputPrevChar :: AlexInput -> Char
+alexInputPrevChar (p,c,bs,s) = c
+
+alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
+alexGetByte (p,c,(b:bs),s) = Just (b,(p,c,bs,s))
+alexGetByte (p,c,[],[]) = Nothing
+alexGetByte (p,_,[],(c:s))  = let p' = alexMove p c 
+                                  (b:bs) = utf8Encode c
+                              in p' `seq`  Just (b, (p', c, bs, s))
+
 
 {-# LINE 89 "templates/wrappers.hs" #-}
 
@@ -86,7 +128,18 @@ type Byte = Word8
 -- `move_pos' calculates the new position after traversing a given character,
 -- assuming the usual eight character tab stops.
 
-{-# LINE 141 "templates/wrappers.hs" #-}
+
+data AlexPosn = AlexPn !Int !Int !Int
+        deriving (Eq,Show)
+
+alexStartPos :: AlexPosn
+alexStartPos = AlexPn 0 1 1
+
+alexMove :: AlexPosn -> Char -> AlexPosn
+alexMove (AlexPn a l c) '\t' = AlexPn (a+1)  l     (((c+7) `div` 8)*8+1)
+alexMove (AlexPn a l c) '\n' = AlexPn (a+1) (l+1)   1
+alexMove (AlexPn a l c) _    = AlexPn (a+1)  l     (c+1)
+
 
 -- -----------------------------------------------------------------------------
 -- Default monad
@@ -103,36 +156,15 @@ type Byte = Word8
 -- -----------------------------------------------------------------------------
 -- Basic wrapper
 
-
-type AlexInput = (Char,[Byte],String)
-
-alexInputPrevChar :: AlexInput -> Char
-alexInputPrevChar (c,_,_) = c
-
--- alexScanTokens :: String -> [token]
-alexScanTokens str = go ('\n',[],str)
-  where go inp@(_,_bs,s) =
-          case alexScan inp 0 of
-                AlexEOF -> []
-                AlexError _ -> error "lexical error"
-                AlexSkip  inp' len     -> go inp'
-                AlexToken inp' len act -> act (take len s) : go inp'
-
-alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
-alexGetByte (c,(b:bs),s) = Just (b,(c,bs,s))
-alexGetByte (c,[],[])    = Nothing
-alexGetByte (_,[],(c:s)) = case utf8Encode c of
-                             (b:bs) -> Just (b, (c, bs, s))
-                             [] -> Nothing
-
+{-# LINE 346 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Basic wrapper, ByteString version
 
-{-# LINE 365 "templates/wrappers.hs" #-}
+{-# LINE 364 "templates/wrappers.hs" #-}
 
-{-# LINE 378 "templates/wrappers.hs" #-}
+{-# LINE 377 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -140,13 +172,22 @@ alexGetByte (_,[],(c:s)) = case utf8Encode c of
 
 -- Adds text positions to the basic model.
 
-{-# LINE 395 "templates/wrappers.hs" #-}
+
+--alexScanTokens :: String -> [token]
+alexScanTokens str = go (alexStartPos,'\n',[],str)
+  where go inp@(pos,_,_,str) =
+          case alexScan inp 0 of
+                AlexEOF -> []
+                AlexError ((AlexPn _ line column),_,_,_) -> error $ "lexical error at " ++ (show line) ++ " line, " ++ (show column) ++ " column"
+                AlexSkip  inp' len     -> go inp'
+                AlexToken inp' len act -> act pos (take len str) : go inp'
+
 
 
 -- -----------------------------------------------------------------------------
 -- Posn wrapper, ByteString version
 
-{-# LINE 410 "templates/wrappers.hs" #-}
+{-# LINE 409 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -166,7 +207,7 @@ alex_check = listArray (0,4957) [-1,9,10,11,12,13,45,48,49,50,51,52,53,54,55,56,
 alex_deflt :: Array Int Int
 alex_deflt = listArray (0,81) [-1,-1,13,13,3,3,-1,-1,-1,-1,-1,16,16,16,-1,-1,16,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 
-alex_accept = listArray (0::Int,81) [AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAccNone,AlexAcc (alex_action_0),AlexAccSkip,AlexAccSkip,AlexAcc (alex_action_3),AlexAcc (alex_action_4),AlexAcc (alex_action_5),AlexAcc (alex_action_6),AlexAcc (alex_action_7),AlexAcc (alex_action_8),AlexAcc (alex_action_9),AlexAcc (alex_action_10),AlexAcc (alex_action_11),AlexAcc (alex_action_12),AlexAcc (alex_action_13),AlexAcc (alex_action_14),AlexAcc (alex_action_15),AlexAcc (alex_action_16),AlexAcc (alex_action_17),AlexAcc (alex_action_18),AlexAcc (alex_action_19),AlexAcc (alex_action_20),AlexAcc (alex_action_21),AlexAcc (alex_action_22),AlexAcc (alex_action_23),AlexAcc (alex_action_24),AlexAcc (alex_action_25),AlexAcc (alex_action_26),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_27),AlexAcc (alex_action_28),AlexAcc (alex_action_29)]
+alex_accept = listArray (0::Int,81) [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[(AlexAcc (alex_action_0))],[(AlexAccSkip)],[(AlexAccSkip)],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_4))],[(AlexAcc (alex_action_5))],[(AlexAcc (alex_action_6))],[(AlexAcc (alex_action_7))],[(AlexAcc (alex_action_8))],[(AlexAcc (alex_action_9))],[(AlexAcc (alex_action_10))],[(AlexAcc (alex_action_11))],[(AlexAcc (alex_action_12))],[(AlexAcc (alex_action_13))],[(AlexAcc (alex_action_14))],[(AlexAcc (alex_action_15))],[(AlexAcc (alex_action_16))],[(AlexAcc (alex_action_17))],[(AlexAcc (alex_action_18))],[(AlexAcc (alex_action_19))],[(AlexAcc (alex_action_20))],[(AlexAcc (alex_action_21))],[(AlexAcc (alex_action_22))],[(AlexAcc (alex_action_23))],[(AlexAcc (alex_action_24))],[(AlexAcc (alex_action_25))],[(AlexAcc (alex_action_26))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_27))],[(AlexAcc (alex_action_28))],[(AlexAcc (alex_action_29))]]
 {-# LINE 50 "Tokens.x" #-}
 
 -- Each action has type :: String -> Token
@@ -204,47 +245,90 @@ data Token
   | TokenDouble Double
   deriving (Eq, Show)
 	
+
+type TokenPos = (Int, Int)
+
+tok :: (String -> Token) -> AlexPosn -> String -> (TokenPos, Token)
+tok f a s = (a2tp a, f s)
+
+tok1 :: Token -> AlexPosn -> String -> (TokenPos, Token)
+tok1 t a s = (a2tp a, t)
+
+a2tp :: AlexPosn -> TokenPos
+a2tp (AlexPn _ l c) = (l, c)
+
 main = do
 	s <- getContents
 	print (alexScanTokens s)
 
 {- A lexer/scanner for the language using Alex. -}
-lexer :: String -> [Token]
+lexer :: String -> [(TokenPos, Token)]
 lexer = alexScanTokens
 
 
-alex_action_0 =  \s -> NewLine			
-alex_action_3 =  \s -> Comma			
-alex_action_4 =  \s -> TokenIF 		
-alex_action_5 =  \s -> TokenTHEN 		
-alex_action_6 =  \s -> TokenELSE		
-alex_action_7 =  \s -> TokenFOR		
-alex_action_8 =  \s -> TokenIN			
-alex_action_9 =  \s -> TokenTRY		
-alex_action_10 =  \s -> TokenWITH		
-alex_action_11 =  \s -> TokenCATCH		
-alex_action_12 =  \s -> TokenLET		
-alex_action_13 =  \s -> TokenPROBABILITY	
-alex_action_14 =  \s -> TokenDO			
-alex_action_15 =  \s -> TokenOTHERWISE		
-alex_action_16 =  \s -> TokenDEF		
-alex_action_17 =  \s -> TokenAND		
-alex_action_18 =  \s -> TokenOR			
-alex_action_19 =  \_ -> TokenNOT    
-alex_action_20 =  \s -> TokenLBRACE		
-alex_action_21 =  \s -> TokenRBRACE		
-alex_action_22 =  \s -> TokenLBRACKET		
-alex_action_23 =  \s -> TokenRBRACKET		
-alex_action_24 =  \s -> TokenLPAREN		
-alex_action_25 =  \s -> TokenRPAREN		
-alex_action_26 =  \s -> TokenConst s 
-alex_action_27 =  \s -> TokenIdent s 
-alex_action_28 =  \s -> TokenInt (read s)	
-alex_action_29 =  \s -> TokenDouble (read s)
+alex_action_0 =  tok1 NewLine			
+alex_action_3 =  tok1 Comma			
+alex_action_4 =  tok1 TokenIF 		
+alex_action_5 =  tok1 TokenTHEN 		
+alex_action_6 =  tok1 TokenELSE		
+alex_action_7 =  tok1 TokenFOR		
+alex_action_8 =  tok1 TokenIN			
+alex_action_9 =  tok1 TokenTRY		
+alex_action_10 =  tok1 TokenWITH		
+alex_action_11 =  tok1 TokenCATCH		
+alex_action_12 =  tok1 TokenLET		
+alex_action_13 =  tok1 TokenPROBABILITY	
+alex_action_14 =  tok1 TokenDO			
+alex_action_15 =  tok1 TokenOTHERWISE		
+alex_action_16 =  tok1 TokenDEF		
+alex_action_17 =  tok1 TokenAND		
+alex_action_18 =  tok1 TokenOR			
+alex_action_19 =  tok1 TokenNOT    
+alex_action_20 =  tok1 TokenLBRACE		
+alex_action_21 =  tok1 TokenRBRACE		
+alex_action_22 =  tok1 TokenLBRACKET		
+alex_action_23 =  tok1 TokenRBRACKET		
+alex_action_24 =  tok1 TokenLPAREN		
+alex_action_25 =  tok1 TokenRPAREN		
+alex_action_26 =  tok $ \s -> TokenConst s 
+alex_action_27 =  tok $ \s -> TokenIdent s 
+alex_action_28 =  tok $ \s -> TokenInt (read s)	
+alex_action_29 =  tok $ \s -> TokenDouble (read s)
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
-{-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command-line>" #-}
+
+
+
+
+
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 5 "<command-line>" 2
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------
 -- ALEX TEMPLATE
@@ -255,19 +339,19 @@ alex_action_29 =  \s -> TokenDouble (read s)
 -- -----------------------------------------------------------------------------
 -- INTERNALS and main scanner engine
 
-{-# LINE 35 "templates/GenericTemplate.hs" #-}
+{-# LINE 37 "templates/GenericTemplate.hs" #-}
 
-{-# LINE 45 "templates/GenericTemplate.hs" #-}
+{-# LINE 47 "templates/GenericTemplate.hs" #-}
 
-{-# LINE 66 "templates/GenericTemplate.hs" #-}
+{-# LINE 68 "templates/GenericTemplate.hs" #-}
 alexIndexInt16OffAddr arr off = arr ! off
 
 
-{-# LINE 87 "templates/GenericTemplate.hs" #-}
+{-# LINE 89 "templates/GenericTemplate.hs" #-}
 alexIndexInt32OffAddr arr off = arr ! off
 
 
-{-# LINE 98 "templates/GenericTemplate.hs" #-}
+{-# LINE 100 "templates/GenericTemplate.hs" #-}
 quickIndex arr i = arr ! i
 
 
@@ -290,24 +374,24 @@ alexScanUser user input (sc)
 		case alexGetByte input of
 			Nothing -> 
 
-				   trace ("End of input.") $
+
 
 				   AlexEOF
 			Just _ ->
 
-				   trace ("Error.") $
+
 
 				   AlexError input'
 
 	(AlexLastSkip input'' len, _) ->
 
-		trace ("Skipping.") $ 
+
 
 		AlexSkip input'' len
 
 	(AlexLastAcc k input''' len, _) ->
 
-		trace ("Accept.") $ 
+
 
 		AlexToken input''' len k
 
@@ -325,42 +409,37 @@ alex_scan_tkn user orig_input len input s last_acc =
      Nothing -> (new_acc, input)
      Just (c, new_input) -> 
 
-      trace ("State: " ++ show (s) ++ ", char: " ++ show c) $
 
-      case fromIntegral c of { (ord_c) ->
-        let
-                base   = alexIndexInt32OffAddr alex_base s
-                offset = (base + ord_c)
-                check  = alexIndexInt16OffAddr alex_check offset
+
+	let
+		(base) = alexIndexInt32OffAddr alex_base s
+		((ord_c)) = fromIntegral c
+		(offset) = (base + ord_c)
+		(check)  = alexIndexInt16OffAddr alex_check offset
 		
-                new_s = if (offset >= (0)) && (check == ord_c)
+		(new_s) = if (offset >= (0)) && (check == ord_c)
 			  then alexIndexInt16OffAddr alex_table offset
 			  else alexIndexInt16OffAddr alex_deflt s
 	in
-        case new_s of
+	case new_s of 
 	    (-1) -> (new_acc, input)
 		-- on an error, we want to keep the input *before* the
 		-- character that failed, not after.
     	    _ -> alex_scan_tkn user orig_input (if c < 0x80 || c >= 0xC0 then (len + (1)) else len)
                                                 -- note that the length is increased ONLY if this is the 1st byte in a char encoding)
 			new_input new_s new_acc
-      }
-  where
-	check_accs (AlexAccNone) = last_acc
-	check_accs (AlexAcc a  ) = AlexLastAcc a input (len)
-	check_accs (AlexAccSkip) = AlexLastSkip  input (len)
 
-	check_accs (AlexAccPred a predx rest)
+  where
+	check_accs [] = last_acc
+	check_accs (AlexAcc a : _) = AlexLastAcc a input (len)
+	check_accs (AlexAccSkip : _)  = AlexLastSkip  input (len)
+	check_accs (AlexAccPred a predx : rest)
 	   | predx user orig_input (len) input
 	   = AlexLastAcc a input (len)
-	   | otherwise
-	   = check_accs rest
-	check_accs (AlexAccSkipPred predx rest)
+	check_accs (AlexAccSkipPred predx : rest)
 	   | predx user orig_input (len) input
 	   = AlexLastSkip input (len)
-	   | otherwise
-	   = check_accs rest
-
+	check_accs (_ : rest) = check_accs rest
 
 data AlexLastAcc a
   = AlexNone
@@ -373,12 +452,10 @@ instance Functor AlexLastAcc where
     fmap f (AlexLastSkip x y) = AlexLastSkip x y
 
 data AlexAcc a user
-  = AlexAccNone
-  | AlexAcc a
+  = AlexAcc a
   | AlexAccSkip
-
-  | AlexAccPred a   (AlexAccPred user) (AlexAcc a user)
-  | AlexAccSkipPred (AlexAccPred user) (AlexAcc a user)
+  | AlexAccPred a (AlexAccPred user)
+  | AlexAccSkipPred (AlexAccPred user)
 
 type AlexAccPred user = user -> AlexInput -> Int -> AlexInput -> Bool
 
@@ -404,7 +481,6 @@ alexRightContext (sc) user _ _ input =
 	-- TODO: there's no need to find the longest
 	-- match when checking the right context, just
 	-- the first match will do.
-
 
 -- used by wrappers
 iUnbox (i) = i

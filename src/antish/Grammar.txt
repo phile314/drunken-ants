@@ -46,28 +46,10 @@ funIdentifier =
   | constIdentifier
 
 bexpr =
-    scond sdir
+    "!" expr
   | expr "&&" expr
   | expr "||" expr
 
--- We could also implement this by defining all these values as built-in functions?
-scond =
-    Friend
-  | Foe
-  | FriendWithFood
-  | FoeWithFood
-  | Food
-  | Rock
-  | Marker iexpr
-  | FoeMarker
-  | Home
-  | FoeHome
-
-sdir =
-    Here
-  | Ahead
-  | LeftAhead
-  | RightAhead
 
 expr =
   | lexpr
