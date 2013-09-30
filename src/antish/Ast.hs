@@ -1,3 +1,6 @@
+-- | This module contains the datatypes that define the Abstract Syntax Tree of the language 
+
+module Ast where
 
 type Identifier = String
 
