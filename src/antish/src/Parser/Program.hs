@@ -1,6 +1,11 @@
-module Parser.Program where
+module Parser.Program (
+    module Parser.Program -- developing - TODO remove
+  , module Parser.Boolean -- developing - TODO remove
+  , module Text.Parsec.Prim )
+  where
 
 import Control.Applicative
+import Text.Parsec.Prim
 import Text.Parsec.String
 import Text.Parsec.Combinator
 import Ast
@@ -22,7 +27,7 @@ pIfThenElse = IfThenElse <$> (reserved "if" *> pBoolExpr) <*>
                              (reserved "else" *> pStmBlock) 
 
 pExpr :: GenParser Char st Expr
-pExpr = pInt <|> parens pExpr
+pExpr = pInt 
 
 pInt :: GenParser Char st Expr
 pInt = ConstInt <$> natural
