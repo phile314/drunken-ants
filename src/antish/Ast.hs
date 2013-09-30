@@ -33,6 +33,7 @@ data BoolExpr =
     And BoolExpr BoolExpr
   | Or  BoolExpr BoolExpr
   | Not BoolExpr
+  | Condition Cond SenseDir
   deriving (Show, Eq)
 
 data Expr =
@@ -41,3 +42,10 @@ data Expr =
 --  | FunCall FunIdentifier [Expr]
   | VarAccess Identifier
   deriving (Show, Eq)
+
+data SenseDir = Here | Ahead | LeftAhead | RightAhead
+  deriving (Show, Eq)
+
+data Cond = Friend | Foe | FriendWithFood | FoeWithFood 
+          | Food | Rock | Marker Integer | FoeMarker | Home | FoeHome
+            deriving (Show, Eq)
