@@ -1,9 +1,9 @@
 module Parser (
     module Parser -- developing -- TODO remove 
   , module Text.Parsec.Combinator
+  , module Text.Parsec.String
   ) where
 
-import Control.Applicative
 import Text.Parsec.String
 import Text.Parsec.Combinator
 import qualified Text.Parsec.Token as P
