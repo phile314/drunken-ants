@@ -16,10 +16,10 @@ pProgram :: GenParser Char st Program
 pProgram = Program <$> pStmBlock
 
 pStmBlock :: GenParser Char st StmBlock
-pStmBlock = StmBlock <$> many1 pStatement
+pStmBlock = StmBlock <$> braces (many1 pStatement)
 
 pStatement :: GenParser Char st Statement
-pStatement = pIfThenElse <|> pLet
+pStatement = pIfThenElse <|> pLet <|> pFunCall
 
 pIfThenElse :: GenParser Char st Statement
 pIfThenElse = IfThenElse <$> (reserved "if" *> pBoolExpr) <*> 
@@ -46,4 +46,10 @@ pVarDecl :: GenParser Char st Binding
 pVarDecl = VarDecl <$> identifier <*> (reserved "=" *> pExpr) 
 
 pFIdent :: GenParser Char st FIdent
-pFIdent = FIdent <$> identifier  
+pFIdent = FIdent <$> identifier
+
+-- Additional checks: 
+-- * does the function exists?
+-- * it is called with the correct number of parameters?
+pFunCall :: GenParser Char st Statement
+pFunCall = FunCall <$> pFIdent <*> many pExpr

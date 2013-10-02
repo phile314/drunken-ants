@@ -23,3 +23,4 @@ parens = P.parens lexer
 symbol = P.symbol lexer
 identifier = P.identifier lexer
 comma = P.comma lexer
+braces = P.braces lexer
