@@ -19,7 +19,7 @@ pStmBlock :: GenParser Char st StmBlock
 pStmBlock = StmBlock <$> braces (many1 pStatement)
 
 pStatement :: GenParser Char st Statement
-pStatement = pIfThenElse <|> pLet <|> pFunCall
+pStatement = pIfThenElse <|> pLet <|> pFunCall <|> pFor
 
 pIfThenElse :: GenParser Char st Statement
 pIfThenElse = IfThenElse <$> (reserved "if" *> pBoolExpr) <*> 
@@ -53,3 +53,8 @@ pFIdent = FIdent <$> identifier
 -- * it is called with the correct number of parameters?
 pFunCall :: GenParser Char st Statement
 pFunCall = FunCall <$> pFIdent <*> many pExpr
+
+pFor :: GenParser Char st Statement
+pFor = For <$> (reserved "for" *> optionMaybe iterVar) <*> list <*> pStmBlock
+  where list = brackets $ pInt `sepBy` comma    -- TODO point free style -> general purpose function
+        iterVar = identifier <* reserved "in"

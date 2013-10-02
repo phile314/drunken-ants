@@ -13,7 +13,7 @@ data StmBlock = StmBlock [Statement]
 data Statement =
     FunCall FIdent [Expr]
   | IfThenElse BoolExpr StmBlock StmBlock
-  | For (Maybe Identifier) Expr StmBlock
+  | For (Maybe Identifier) [Expr] StmBlock
   | Try StmBlock StmBlock StmBlock
   | Let [Binding] StmBlock
   | WithProb Double StmBlock StmBlock
@@ -36,7 +36,6 @@ data BoolExpr =
 
 data Expr =
   ConstInt Integer
---  | ListExpr [Expr]
 --  | FunCall FunIdentifier [Expr]
   | VarAccess Identifier
   deriving (Show, Eq)
