@@ -1,4 +1,7 @@
-module Parser where
+module Parser (
+    module Parser -- developing -- TODO remove 
+  , module Text.Parsec.Combinator
+  ) where
 
 import Control.Applicative
 import Text.Parsec.String
@@ -18,3 +21,5 @@ reservedOp = P.reservedOp lexer
 natural = P.natural lexer
 parens = P.parens lexer
 symbol = P.symbol lexer
+identifier = P.identifier lexer
+comma = P.comma lexer

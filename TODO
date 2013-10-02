@@ -3,3 +3,6 @@ Try to write parsers (with any parsing lib) for the datatype defined Ast.hs
 Add different newlines for different OSes
 
 I don't think we should track Tokens.hs (it's just generated code...) (makefile for this kind of stuff...)
+
+-- Grammar
+What is the difference between VIdent and CIdent in FunIdentifier ? (Removed now)

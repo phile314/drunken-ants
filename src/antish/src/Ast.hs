@@ -11,7 +11,7 @@ data StmBlock = StmBlock [Statement]
   deriving (Show, Eq)
 
 data Statement =
-    FunCall FunIdentifier [Expr]
+    FunCall FIdent [Expr]
   | IfThenElse BoolExpr StmBlock StmBlock
   | For (Maybe Identifier) Expr StmBlock
   | Try StmBlock StmBlock StmBlock
@@ -21,12 +21,10 @@ data Statement =
 
 data Binding =
     VarDecl Identifier Expr
-  | FunDecl Identifier [Identifier] StmBlock
+  | FunDecl FIdent [Identifier] StmBlock
   deriving (Show, Eq)
 
-data FunIdentifier =
-    VIdent Identifier
-  | CIdent Identifier
+data FIdent = FIdent Identifier 
   deriving (Show, Eq)
 
 data BoolExpr =
