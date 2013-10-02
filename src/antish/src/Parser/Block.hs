@@ -7,15 +7,17 @@ import Parser
 import Parser.Boolean
 
 pStmBlock :: GenParser Char st StmBlock
-pStmBlock = StmBlock <$> braces (many1 pStatement)
+pStmBlock = StmBlock <$> (moreStatements <|> oneStatement)
+  where moreStatements = braces $ pStatement `sepBy1` semi 
+        oneStatement   = count 1 pStatement
 
 pStatement :: GenParser Char st Statement
-pStatement = pIfThenElse <|> pLet <|> pFunCall <|> pFor
+pStatement = choice $ map try [pIfThenElse, pLet, pFor, pTry, pFunCall]
 
 pIfThenElse :: GenParser Char st Statement
 pIfThenElse = IfThenElse <$> (reserved "if" *> pBoolExpr) <*> 
                              (reserved "then" *> pStmBlock) <*> 
-                             (reserved "else" *> pStmBlock) 
+                             optionMaybe (reserved "else" *> pStmBlock) 
 
 pExpr :: GenParser Char st Expr
 pExpr = pInt 
@@ -49,3 +51,8 @@ pFor :: GenParser Char st Statement
 pFor = For <$> (reserved "for" *> optionMaybe iterVar) <*> list <*> pStmBlock
   where list = brackets $ pInt `sepBy` comma    -- TODO point free style -> general purpose function
         iterVar = identifier <* reserved "in"
+
+pTry :: GenParser Char st Statement
+pTry = Try <$> (reserved "try" *> pStmBlock)  <*> 
+               (reserved "with" *> pStmBlock) <*> 
+               (reserved "catch" *> pStmBlock)

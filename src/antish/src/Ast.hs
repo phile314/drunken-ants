@@ -12,7 +12,7 @@ data StmBlock = StmBlock [Statement]
 
 data Statement =
     FunCall FIdent [Expr]
-  | IfThenElse BoolExpr StmBlock StmBlock
+  | IfThenElse BoolExpr StmBlock (Maybe StmBlock)
   | For (Maybe Identifier) [Expr] StmBlock
   | Try StmBlock StmBlock StmBlock
   | Let [Binding] StmBlock
