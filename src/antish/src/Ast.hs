@@ -24,7 +24,7 @@ data Binding =
   | FunDecl FIdent [Identifier] StmBlock
   deriving (Show, Eq)
 
-data FIdent = FIdent Identifier 
+data FIdent = FIdent Identifier -- Should be dropped for Var = (Identifier, Type)
   deriving (Show, Eq)
 
 data BoolExpr =

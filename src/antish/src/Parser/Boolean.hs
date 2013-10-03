@@ -44,6 +44,9 @@ pRightAhead = reserved "RightAhead" *> return RightAhead
 -------------------------------------------------------------------------------
 -- Cond Parsers
 
+-- TODO use map on pairs for pCond
+-- map magic [(Foe, "Foe"), ... ]
+
 pCond :: GenParser Char st Cond
 pCond = choice conditions
   where conditions = [pFriend, pFoe, pFriendWithFood, pFoeWithFood,
