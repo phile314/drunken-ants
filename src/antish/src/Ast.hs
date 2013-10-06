@@ -1,6 +1,11 @@
 -- | This module contains the datatypes that define the Abstract Syntax Tree of the language 
 
-module Ast where
+module Ast (
+    module Assembly 
+  , module Ast  -- TODO remove -- developing
+  ) where
+
+import Assembly
 
 type Identifier = String
 
@@ -39,10 +44,3 @@ data Expr =
 --  | FunCall FunIdentifier [Expr]
   | VarAccess Identifier
   deriving (Show, Eq)
-
-data SenseDir = Here | Ahead | LeftAhead | RightAhead
-  deriving (Show, Eq)
-
-data Cond = Friend | Foe | FriendWithFood | FoeWithFood 
-          | Food | Rock | Marker Integer | FoeMarker | Home | FoeHome
-            deriving (Show, Eq)

@@ -2,7 +2,7 @@ module  Parser.Boolean (
   module Parser.Boolean -- developing - TODO remove
   )where
 
-import Ast ( BoolExpr (..), SenseDir (..), Cond (..))
+import Ast ( BoolExpr (..), Cond (..), SenseDir(..))
 import Control.Applicative
 import Text.Parsec.String
 import Text.Parsec.Combinator 
