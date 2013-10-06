@@ -8,3 +8,8 @@ I don't think we should track Tokens.hs (it's just generated code...) (makefile 
 What is the difference between VIdent and CIdent in FunIdentifier ? (Removed now)
 
 Add Var as (Identifier, Type)
+
+-- Project
+Add haddock description
+Provide test cases for parsers (also failing examples)
+Complete cabal file
