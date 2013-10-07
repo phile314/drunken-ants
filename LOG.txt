@@ -1,0 +1,11 @@
+03.10.2013
+
+- precondition, postconditions and invariants are not a topic at the moment
+- variable table -> nested maps
+- we use semi commas
+- we use parsec
+    * every option probably could work
+    * parsec -> documentation, slightly more predefined functions than uu-parsinglib
+- functions don't have return values for the time being
+
+- entry point is first statement in the main statement block
