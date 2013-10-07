@@ -17,34 +17,23 @@ data Statement =
   | IfThenElse Expr StmBlock StmBlock
   | For (Maybe Identifier) Expr StmBlock
   | Try StmBlock StmBlock StmBlock
-  | Let [Binding] StmBlock
+  | Let [Binding]
   | WithProb Double StmBlock StmBlock
   deriving (Show)
 
 data Binding =
-    VarDecl Identifier Expr
+    VarDecl Identifier StmBlock
   | FunDecl Identifier [Identifier] StmBlock
-  deriving (Show)
-
-data FunIdentifier =
-    VIdent Identifier
-  | CIdent Identifier
-  deriving (Show)
-
-data BoolExpr =
-    And Expr Expr
-  | Or  Expr Expr
-  | Not Expr
   deriving (Show)
 
 data Expr =
     Appl Expr Expr
-  | BoolExpr BoolExpr
-  | ListLiteral [Expr]
---  | FunCall FunIdentifier [Expr]
-  | ConstBool Bool
-  | ConstInt Int
+  | ListLit [Expr]
+  | BoolLit Bool
+  | IntLit Int
   | VarAccess Identifier
   | OpCall Expr Identifier Expr
+
+  | Lambda Identifier Expr
   deriving (Show)
 

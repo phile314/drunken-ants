@@ -1,0 +1,37 @@
+Left (
+	Program (
+		StmBlock [
+			Let [
+				VarDecl "turnBack" (
+					StmBlock [
+						For
+							Nothing (ListLit [IntLit 1,IntLit 2,IntLit 3])
+							(StmBlock [Call (VarAccess "turn")])
+					]
+				)
+			],
+			Let [
+				VarDecl "goHome" (
+					StmBlock [
+						Call (VarAccess "move"),
+						IfThenElse
+							(Appl (VarAccess "not") (Appl (VarAccess "Home") (VarAccess "Here")))
+							(StmBlock [Call (VarAccess "goHome")])
+							(StmBlock [])
+					]
+				)
+			],
+			Let [
+				VarDecl "findFood" (
+					StmBlock [
+						Call (VarAccess "move"),
+						Try
+							(StmBlock [Call (VarAccess "pickUp")])
+							(StmBlock [Call (VarAccess "turnBack"),Call (VarAccess "goHome"),Call (VarAccess "drop"),Call (VarAccess "findFood")])
+							(StmBlock [Call (VarAccess "findFood")])
+					]
+				)
+			]
+		]
+	)
+)
