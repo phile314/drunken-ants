@@ -8,7 +8,7 @@ import Ast
 import Assembly
 
 instance (Compilable a) => Compilable [a] where
-  compile s xs = concatMap (uncurry compile) $ zip [s..] xs
+  compile s xs = concatMap (uncurry compile) $ zip [s..] xs  -- WRONG!! foldr
 
 instance (Compilable a) => Compilable (Maybe a) where
   compile s (Just x) = compile s x
