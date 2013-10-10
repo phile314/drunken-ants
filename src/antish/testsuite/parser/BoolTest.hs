@@ -21,16 +21,30 @@ main = do
     else return ()
 
 tests :: Test
-tests = TestList [simpleCondition] 
+tests = TestList [simpleCondition, simpleNotCondition] 
 
--- tests that all the basic conditions are parsed correctly
+-- | Returns a list containing all the 'Cond' and 'SenseDir' pairs, that are
+-- | all the basic conditions that can be tested in a @if@
+allBasicInput :: [(Cond,SenseDir)]
+allBasicInput = [(c,s) | c <- condition, s <- sensedir]
+  where sensedir = [Here, Ahead, LeftAhead, RightAhead]
+        condition = [Friend, Foe, FriendWithFood, FoeWithFood, Food, Rock, 
+                     FoeMarker, Home, FoeHome] ++ [Marker i | i <- [0..5]]
+
+
+-- | Tests that all the basic conditions are parsed correctly
 simpleCondition :: Test
-simpleCondition = TestList $ [ expected x y ~=? actual x y | (x,y) <- bc]
-   where bc = [(c,s) | c <- condition, s <- sensedir]
-         sensedir = [Here, Ahead, LeftAhead, RightAhead]
-         condition = [Friend, Foe, FriendWithFood, FoeWithFood, Food, Rock, 
-                      FoeMarker, Home, FoeHome] ++ [Marker i | i <- [0..5]]
-         expected x y = Condition x y
+simpleCondition = TestList $ [expected x y ~=? actual x y | (x,y) <- allBasicInput]
+   where expected = Condition 
          actual x y = let input = show x ++ " " ++ show y
                           result = parse pBoolExpr input input in
                             either (error . show) id result
+
+-- | Tests that the use of not (@!@) before a boolean condition is handled correctly
+simpleNotCondition :: Test
+simpleNotCondition = TestList $ [expected x y ~=? actual x y | (x,y) <- allBasicInput]
+  where expected x y = Not $ Condition x y
+        actual x y = let input = "!" ++ show x ++ " " ++ show y
+                         result = parse pBoolExpr input input in
+                          either (error . show) id result 
+
