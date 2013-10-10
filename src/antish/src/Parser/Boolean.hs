@@ -16,11 +16,11 @@ bOperators = [  [Prefix (reservedOp "!"   *> return (Not              ))        
               ]
 
 bTerm :: GenParser Char st BoolExpr
-bTerm = term <|> parens term
-  where term = Condition <$> pCond <*> pSenseDir 
+bTerm = Condition <$> pCond <*> pSenseDir 
 
 pBoolExpr :: GenParser Char st BoolExpr
-pBoolExpr = buildExpressionParser bOperators bTerm
+pBoolExpr = parens exprParser <|> exprParser 
+  where exprParser = buildExpressionParser bOperators bTerm
 
 -------------------------------------------------------------------------------
 -- SenseDir Parsers
