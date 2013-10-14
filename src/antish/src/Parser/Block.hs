@@ -3,8 +3,9 @@ module Parser.Block where
 import Control.Applicative hiding ((<|>), many)
 import Text.Parsec.Prim
 import Ast
-import Parser
+import Parser.LangDef
 import Parser.Boolean
+import Text.Parsec.Combinator
 
 pStmBlock :: GenParser Char st StmBlock
 pStmBlock = StmBlock <$> (moreStatements <|> oneStatement)

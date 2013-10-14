@@ -1,8 +1,10 @@
-module Parser (
-    module Parser -- developing -- TODO remove 
-  , module Text.Parsec.Combinator
+module Parser.LangDef
+(
+    module Text.Parsec.Combinator
   , module Text.Parsec.String
+  , module Parser.LangDef
   ) where
+
 
 import Text.Parsec.String
 import Text.Parsec.Combinator
@@ -26,3 +28,4 @@ comma = P.comma lexer
 braces = P.braces lexer
 brackets = P.brackets lexer
 semi = P.semi lexer
+
