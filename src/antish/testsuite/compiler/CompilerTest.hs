@@ -38,5 +38,5 @@ wrongNumberParameters = expected ~=? actual
         foo = "foo"
         expected = WrongNumberParameters foo 1 2
         actual = either id (error "Compilation should fail") result
-        result = runCompile (compile input) (CState 0 funEnv)
-        funEnv = Map.insert foo (2, undefined) Map.empty
+        result = runCompile (compile input) (CState 0 funEnv Map.empty)
+        funEnv = Map.insert foo (2, undefined) Map.empty 

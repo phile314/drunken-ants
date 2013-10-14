@@ -34,7 +34,7 @@ pBinding :: GenParser Char st Binding
 pBinding = try pVarDecl <|> pFunDecl
 
 pFunDecl :: GenParser Char st Binding
-pFunDecl = FunDecl <$> identifier <*> (reserved "=" *> pStmBlock)
+pFunDecl = FunDecl <$> identifier <*> many identifier <*> (reserved "=" *> pStmBlock)
 
 pVarDecl :: GenParser Char st Binding
 pVarDecl = VarDecl <$> identifier <*> (reserved "=" *> pExpr) 

@@ -26,7 +26,7 @@ data Statement =
 
 data Binding =
     VarDecl Identifier Expr
-  | FunDecl Identifier StmBlock
+  | FunDecl Identifier [Identifier] StmBlock
   deriving Eq
 
 data BoolExpr =
@@ -38,7 +38,6 @@ data BoolExpr =
 
 data Expr =
   ConstInt Integer
---  | FunCall FunIdentifier [Expr]
   | VarAccess Identifier
   deriving (Show, Eq)
 
@@ -72,7 +71,7 @@ showStatement n s = indent n ++ showStm s
 
 showBind :: Int -> Binding -> String
 showBind n (VarDecl i e) = show i ++ " = " ++ show e
-showBind n (FunDecl i ss) = show i ++ " {\n" ++ showBlock (n+1) ss ++ indent n ++"}"
+showBind n (FunDecl i args ss) = show i ++ show args ++ " {\n" ++ showBlock (n+1) ss ++ indent n ++"}"
 
 indent :: Int -> String
 indent k = concat ["  " | r <- [0..k]]
