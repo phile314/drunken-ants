@@ -17,7 +17,7 @@ cabal-version:       >=1.8
 library
   exposed-modules:     Ast, Parser.Boolean, Parser.Program, Parser, Compiler.Compile, Compiler.Class
   other-modules:       Assembly, Compiler.CompileT
-  build-depends:       base ==4.6.*, parsec ==3.1.*, mtl ==2.1.*
+  build-depends:       base ==4.6.*, parsec ==3.1.*, mtl ==2.1.*, containers ==0.5.*
   hs-source-dirs:      src 
 
 test-suite  parser-test
