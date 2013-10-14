@@ -1,14 +1,12 @@
 -- | This module provides parsers for boolean expressions
 
-module  Parser.Boolean (
-  module Parser.Boolean -- developing - TODO remove
-  )where
+module  Parser.Boolean where
 
 import Ast ( BoolExpr (..), Cond (..), SenseDir(..))
 import Control.Applicative
 import Text.Parsec.String
 import Text.Parsec.Combinator 
-import Parser
+import Parser.LangDef
 import Text.Parsec.Prim hiding ((<|>))
 import Text.Parsec.Expr
 import Text.Read hiding (parens, choice)

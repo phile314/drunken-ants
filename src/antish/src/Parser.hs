@@ -1,28 +1,19 @@
 module Parser (
-    module Parser -- developing -- TODO remove 
-  , module Text.Parsec.Combinator
-  , module Text.Parsec.String
+  parseStr, parseFile,
+  module Text.Parsec.Error
   ) where
 
 import Text.Parsec.String
 import Text.Parsec.Combinator
-import qualified Text.Parsec.Token as P
-import Text.Parsec.Language (haskellDef)
+import Text.Parsec.Prim
 import Ast
+import Text.Parsec.Error
+import Parser.Program
 
-antish :: P.LanguageDef st
-antish = haskellDef
 
-lexer = P.makeTokenParser antish
+parseStr :: String -> Maybe String -> Either ParseError Program
+parseStr inp (Just file) = parse pProgram inp file
+parseStr inp Nothing     = parse pProgram inp ""
 
--- The library functions tailored on our language definition
-reserved = P.reserved lexer
-reservedOp = P.reservedOp lexer
-natural = P.natural lexer
-parens = P.parens lexer
-symbol = P.symbol lexer
-identifier = P.identifier lexer
-comma = P.comma lexer
-braces = P.braces lexer
-brackets = P.brackets lexer
-semi = P.semi lexer
+parseFile :: String -> IO (Either ParseError Program)
+parseFile = parseFromFile pProgram
