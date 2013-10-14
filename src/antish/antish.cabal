@@ -17,7 +17,7 @@ cabal-version:       >=1.8
 library
   exposed-modules:     Ast, Parser.Boolean, Parser.Program, Parser, Compiler.Compile, Compiler.Class
   other-modules:       Assembly, Compiler.CompileT, Compiler.Error
-  build-depends:       base >=4.5, parsec ==3.1.*, mtl ==2.1.*, containers ==0.5.*
+  build-depends:       base >=4.5, parsec ==3.1.*, mtl ==2.1.*, containers >=0.4
   hs-source-dirs:      src
 
 executable main
@@ -34,5 +34,5 @@ test-suite  parser-test
 test-suite compiler-test
   type:             exitcode-stdio-1.0
   main-is:          CompilerTest.hs
-  build-depends:    base >=4.5, HUnit ==1.2.*, mtl ==2.1.*, containers ==0.5.*, antish
+  build-depends:    base >=4.5, HUnit ==1.2.*, mtl ==2.1.*, containers >=0.4, antish
   hs-source-dirs:   testsuite/compiler, src/
