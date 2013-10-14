@@ -34,19 +34,16 @@ pBinding :: GenParser Char st Binding
 pBinding = try pVarDecl <|> pFunDecl
 
 pFunDecl :: GenParser Char st Binding
-pFunDecl = FunDecl <$> pFIdent <*> many identifier <*> (reserved "=" *> pStmBlock)
+pFunDecl = FunDecl <$> identifier <*> many identifier <*> (reserved "=" *> pStmBlock)
 
 pVarDecl :: GenParser Char st Binding
 pVarDecl = VarDecl <$> identifier <*> (reserved "=" *> pExpr) 
-
-pFIdent :: GenParser Char st FIdent
-pFIdent = FIdent <$> identifier
 
 -- Additional checks: 
 -- * does the function exists?
 -- * it is called with the correct number of parameters?
 pFunCall :: GenParser Char st Statement
-pFunCall = FunCall <$> pFIdent <*> many pExpr
+pFunCall = FunCall <$> identifier <*> many pExpr
 
 pFor :: GenParser Char st Statement
 pFor = For <$> (reserved "for" *> optionMaybe iterVar) <*> list <*> pStmBlock

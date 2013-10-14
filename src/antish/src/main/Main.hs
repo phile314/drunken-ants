@@ -5,8 +5,9 @@ import Parser
 
 -- TODO
 main :: IO ()
-main = do
+main = undefined
+{--do
   args <- getArgs
   let [file] = args
 
- 
+ --}
