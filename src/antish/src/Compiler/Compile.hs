@@ -11,5 +11,5 @@ import Compiler.Error
 
 type Compile s a = CompileT s Identity a
 
-runCompile :: s -> Compile s a -> Either CError (a ,s)
-runCompile s c = runIdentity $ runCompileT s c
+runCompile :: Compile s a -> s -> Either CError (a ,s)
+runCompile c s = runIdentity $ runCompileT c s

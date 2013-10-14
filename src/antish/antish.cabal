@@ -31,3 +31,8 @@ test-suite  parser-test
   build-depends:    base >=4.5, HUnit ==1.2.*, parsec ==3.1.*, antish
   hs-source-dirs:   testsuite/parser, src/
 
+test-suite compiler-test
+  type:             exitcode-stdio-1.0
+  main-is:          CompilerTest.hs
+  build-depends:    base >=4.5, HUnit ==1.2.*, mtl ==2.1.*, containers ==0.5.*, antish
+  hs-source-dirs:   testsuite/compiler, src/

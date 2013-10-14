@@ -30,5 +30,5 @@ instance Monad m => MonadState s (CompileT s m) where
 throwError :: Monad m => CError -> CompileT s m a
 throwError = C . lift . Control.Monad.Error.throwError
 
-runCompileT :: (Monad m) => s -> CompileT s m a -> m (Either CError (a,s))
-runCompileT s (C st) = runErrorT $ runStateT st s 
+runCompileT :: (Monad m) => CompileT s m a -> s -> m (Either CError (a,s))
+runCompileT (C st) s = runErrorT $ runStateT st s 
