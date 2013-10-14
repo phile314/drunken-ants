@@ -8,4 +8,10 @@
     * parsec -> documentation, slightly more predefined functions than uu-parsinglib
 - functions don't have return values for the time being
 
+07.10.2013
 - entry point is first statement in the main statement block
+
+14.10.2013
+- laurens parser stuff
+- ph main and compiling
+- marco compiling stuff 
