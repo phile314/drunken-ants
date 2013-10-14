@@ -1,5 +1,8 @@
 -- | Defines the compiling operations for the elements of the Ast
 
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Compiler.Class where
 
 import Assembly (Instruction, AntState) 
@@ -7,16 +10,17 @@ import Compiler.Compile
 import Ast
 import Control.Monad.State hiding (gets)
 import qualified Data.Map as Map
+import Compiler.Error
 
 -- | The state used in the Compile monad
 data CState = CState {   currentState :: AntState -- ^ The first available state
-                       , functions :: Map.Map Identifier Definition
+                       , functions :: Map.Map Identifier FunDef
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
 -- is a function that given the exact number of parameters of the correct type returns the assembly code
 -- for the function.
-type Definition = (Int, [Expr] -> [Instruction])
+type FunDef = (Int, [Expr] -> [Instruction])
 
 -- | The empty CState
 empty :: CState
@@ -28,14 +32,14 @@ update xs = modify (\s -> s { currentState = (cs s) + length xs} )
   where cs s = currentState s
 
 -- | The identifier is looked up among the declared functions.
--- If the function is not in scope the monad fails.
-lookupFun :: Identifier -> Compile CState Definition
+-- If the function is not in scope the monad throwErrors.
+lookupFun :: Identifier -> Compile CState FunDef
 lookupFun iden = do 
   s <- get 
   let funMap = functions s 
   case Map.lookup iden funMap of
     Just def -> return def 
-    Nothing -> fail $ "Function " ++ iden ++ " is not in scope"
+    Nothing -> throwError $ FunNotInScope iden 
 
 class Compilable c where
    compile :: c -> Compile CState [Instruction]
@@ -63,10 +67,11 @@ instance Compilable Statement where
         let res = [Sense sd 0 0 c] ++ i1 ++ i2  -- TODO missing correct jump
         update res
         return res
---    _ -> fail (show expr ++ " is not a boolean expression") -- BoolExpr will be part of Expr soon
+--    _ -> throwError NotBoolean expr -- BoolExpr will be part of Expr soon
 
   compile (FunCall ident args) = do 
-    (nargs, body) <- lookupFun ident
-    if nargs /= length args then fail $ ident ++ " expects " ++ show (nargs) ++ " arguments"
+    (expectedArgs , body) <- lookupFun ident
+    let nArgs = length args
+    if nArgs /= expectedArgs then throwError $ WrongNumberParameters ident nArgs expectedArgs
       else return $ body args
  
