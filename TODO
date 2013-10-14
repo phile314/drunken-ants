@@ -5,9 +5,25 @@ Add Var as (Identifier, Type)
 
 -- Personal Branch (dev)
 Dealing with typed expr (GADT, errors ... )
-Think about a good signature for compile
-Define a way to jump (maybe a jump instruction??? Jump s :: Instruction)
+  GADTs cannot be used easily:
+    In many data types Expr should be changed with Expr a, but we cannot add a to Statement
+    Dealing with heterogeneous lists is unsuitable.
 
+Think about a good signature for compile
+  I would use a monadic computation to model the compilation process:
+    The compilation is a complex statefull transformation that might also fail 
+    due to type error (or recursion)
+  Propose:
+    Compile transformer
+      Extendible (Log)
+      Combines:   * State
+                  * Error Handling
+                  * Provides Concatanation (>>=)
+
+Define a way to jump (maybe a jump instruction??? Jump s :: Instruction)
+  I would add an instruction Jump s and "compile" it properly using flip  
+    Jump s -> Flip 1 s anyState
+  
 -- Project
 -- Short term tasks
 * Always write haddock documentation and tests for your code.

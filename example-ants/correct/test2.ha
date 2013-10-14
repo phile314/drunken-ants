@@ -1,7 +1,5 @@
 let turnBack = { for [1,2,3] turn }, 
-    goHome = {
-      move;
-      if !(Home Here) then goHome },
+    goHome = move ,
     findFood = {
      move;
      try pickUp with {
