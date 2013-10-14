@@ -20,10 +20,13 @@ library
   build-depends:       base >=4.5, parsec ==3.1.*, mtl ==2.1.*, containers >=0.4
   hs-source-dirs:      src
 
+
 executable main
-  hs-source-dirs:      src/main
+  hs-source-dirs:      src,src/main
   main-is:             Main.hs
-  build-depends:       base >=4.5, directory >=1.0,antish
+  -- this is not really an elegant solution, but if we add the antish library as dependency all hell breaks loose:
+  -- ..../antish/dist/build/libHSantish-0.1.0.0.a(Program.o): In function `s6K6_info':(.text+0x25c): undefined reference to `antishzm0zi1zi0zi0_ParserziBlock_pBinding10_closure'
+  build-depends:       base >=4.5, parsec ==3.1.*, mtl ==2.1.*, containers >=0.4
 
 test-suite  parser-test
   type:             exitcode-stdio-1.0
