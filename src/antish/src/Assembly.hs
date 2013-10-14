@@ -21,7 +21,7 @@ data Instruction
    | Flip Int AntState AntState
  deriving Show
 
-data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show,Eq)
+data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show,Eq,Read)
 
 type MarkerNumber = Int -- 0..5
 
