@@ -8,7 +8,7 @@ import Compiler.Error
 import Ast
 import Compiler.Class
 import Compiler.Compile
-import qualified Data.Map as Map
+import qualified Compiler.Scope as Scope
 
 -- | The entry point of the test suite
 main :: IO ()
@@ -38,5 +38,5 @@ wrongNumberParameters = expected ~=? actual
         foo = "foo"
         expected = WrongNumberParameters foo 1 2
         actual = either id (error "Compilation should fail") result
-        result = runCompile (compile input) (CState 0 funEnv Map.empty)
-        funEnv = Map.insert foo (2, undefined) Map.empty 
+        result = runCompile (compile input) (CState 0 funEnv Scope.empty)
+        funEnv = Scope.insert foo (2, undefined) Scope.empty 

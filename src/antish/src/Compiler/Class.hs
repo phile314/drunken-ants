@@ -9,13 +9,13 @@ import Assembly (Instruction, AntState)
 import Compiler.Compile
 import Ast
 import Control.Monad.State hiding (gets)
-import qualified Data.Map as Map
 import Compiler.Error
+import Compiler.Scope as Scope
 
 -- | The state used in the Compile monad
 data CState = CState {   currentState :: AntState -- ^ The first available state
-                       , functions :: Map.Map Identifier FunDef
-                       , variables :: Map.Map Identifier VarDef
+                       , functions :: Scope Identifier FunDef
+                       , variables :: Scope Identifier VarDef
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
@@ -26,7 +26,7 @@ type VarDef = Expr
 
 -- | The empty CState
 empty :: CState
-empty = CState 0 Map.empty Map.empty
+empty = CState 0 Scope.empty Scope.empty
 
 -- | Updates 'currentState' so that it points to an available state after producing some assembly code
 update :: [Instruction] -> Compile CState ()
@@ -34,13 +34,13 @@ update xs = modify (\s -> s { currentState = (cs s) + length xs} )
   where cs s = currentState s
 
 -- | Returns the current variable environment
-varEnv :: Compile CState (Map.Map Identifier VarDef)
+varEnv :: Compile CState (Scope Identifier VarDef)
 varEnv = do
   s <- get
   return $ variables s
 
 -- | Returns the current function environment
-funEnv :: Compile CState (Map.Map Identifier FunDef)
+funEnv :: Compile CState (Scope Identifier FunDef)
 funEnv = do
   s <- get
   return $ functions s
@@ -49,23 +49,42 @@ funEnv = do
 insertBinding :: Binding -> Compile CState ()
 insertBinding (VarDecl iden expr) = do
   env <- varEnv
-  modify $ \s -> s { variables = Map.insert iden expr env} 
-
+  modify $ \s -> s { variables = Scope.insert iden expr env} 
 insertBinding (FunDecl iden args b) = do
   env <- funEnv
   let c = precompile b args
-  modify $ \s -> s { functions = Map.insert iden (length args, c) env}
+  modify $ \s -> s { functions = Scope.insert iden (length args, c) env}
+
+-- | Creates a scope in the correct position where the parameters of a function should be looked up
+insertParameters :: [Identifier] -> [Expr] -> Compile CState ()
+insertParameters args values = do
+  let newScope = foldl (flip $ uncurry Scope.insert) Scope.empty $ zip args values
+  env <- varEnv
+  let newEnv = father newScope env
+  modify $ \s -> s { variables = newEnv }
 
 -- | The identifier is looked up among the declared functions.
 -- If the function is not in scope the monad throwErrors.
 lookupFun :: Identifier -> Compile CState FunDef
 lookupFun iden = do 
   env <- funEnv
-  case Map.lookup iden env of
+  case Scope.lookup iden env of
     Just def -> return def 
     Nothing -> throwError $ FunNotInScope iden 
 
-insertParameters = undefined
+-- | Add a new empty scope both for function and variables as the current scope
+newScope :: Compile CState ()
+newScope = do
+  varScope <- varEnv
+  funScope <- funEnv
+  modify $ \s -> s { variables = children Scope.empty varScope, functions = children Scope.empty funScope}
+
+-- | Remove the current scope both for function and variables
+removeScope :: Compile CState ()
+removeScope = do
+  varScope <- varEnv
+  funScope <- funEnv
+  modify $ \s -> s { variables = remove varScope, functions = remove funScope}
 
 class Compilable c where
   -- | Returns a monadic computation that performs the compilation
@@ -106,8 +125,11 @@ instance Compilable Statement where
       else body args
  
   compile (Let bs b) = do
+    newScope 
     mapM_ insertBinding bs 
-    compile b
+    i <- compile b
+    removeScope
+    return i 
 
 -- | This class represents something that can be preprocessed but some information has not been provided 
 -- yet for it to be fully compiled, like for instance function declaration and variable access.
@@ -117,4 +139,8 @@ class PreCompilable c where
 instance PreCompilable StmBlock where
   precompile (StmBlock xs) argNames = \args -> do 
     insertParameters argNames args
-    compile xs
+    i <- compile xs
+    removeScope      -- Parameters Scope
+    removeScope      -- Block Scope
+    return i
+    
