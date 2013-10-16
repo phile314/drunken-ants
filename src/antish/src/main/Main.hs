@@ -2,14 +2,17 @@ module Main where
 
 import Parser
 import System.Environment
+import Ast
 
 -- TODO
 main :: IO ()
 main = do
   args <- getArgs
   let [file] = args
-  ast <- parseFile file
-  print ast
+  res <- parseFile file
+  case res of
+    (Right t) -> print (UseTree t)
+    (Left er) -> print er
   
  
 {-
