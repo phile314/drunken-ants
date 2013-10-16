@@ -36,7 +36,7 @@ data BoolExpr =
   | Or  BoolExpr BoolExpr
   | Not BoolExpr
   | Condition Cond SenseDir
-  deriving Eq
+  deriving (Eq, Show)
 
 data Expr =
   ConstInt Integer
