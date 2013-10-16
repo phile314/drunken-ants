@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 -- | This module contains the datatypes that define the Abstract Syntax Tree of the language 
 
 module Ast (
@@ -6,6 +7,7 @@ module Ast (
   ) where
 
 import Assembly
+import Data.Tree
 
 type Identifier = String
 
@@ -41,8 +43,37 @@ data Expr =
   | VarAccess Identifier
   deriving (Show, Eq)
 
+class ToTree a where
+  toTree :: a -> Tree String
+
+instance ToTree Program where
+  toTree (Program ss) = Node "Program" [toTree ss]
+
+instance ToTree StmBlock where
+  toTree (StmBlock stms) = Node "StmBlock" (map toTree stms)
+
+instance ToTree (Maybe StmBlock) where
+  toTree Nothing = Node "Nothing" []
+  toTree (Just sb) = Node "Some" [toTree sb]
+
+instance ToTree Statement where
+  toTree (FunCall id exs) = Node ("FunCall " ++ id) (map toTree exs)
+  toTree (IfThenElse c s1 s2) = Node "IfThenElse" [toTree c, toTree s1, toTree s2]
+
+instance ToTree Expr where
+  toTree (ConstInt i)   = Node ("ConstInt " ++ (show i)) []
+  toTree (VarAccess id) = Node ("VarAccess " ++ id) []
+
+instance ToTree BoolExpr where
+  toTree (And b1 b2) = Node "And" [toTree b1, toTree b2]
+  toTree (Or  b1 b2) = Node "Or"  [toTree b1, toTree b2]
+
+--instance ToTree a => Show a where
+--  show t = drawTree $ toTree t
+
 -- pretty printing program
-instance Show Program where
+{-
+ - instance Show Program where
 	show (Program s) = '\n' : show s
 instance Show StmBlock where
 	show = showBlock 0 
@@ -75,3 +106,5 @@ showBind n (FunDecl i args ss) = show i ++ show args ++ " {\n" ++ showBlock (n+1
 
 indent :: Int -> String
 indent k = concat ["  " | r <- [0..k]]
+
+--}
