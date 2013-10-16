@@ -141,6 +141,6 @@ instance PreCompilable StmBlock where
     insertParameters argNames args
     i <- compile xs
     removeScope      -- Parameters Scope
-    removeScope      -- Block Scope
+    removeScope      -- Block Scope -- TODO should be removed by block
     return i
     
