@@ -31,13 +31,13 @@ executable main
 test-suite  bool-test
   type:             exitcode-stdio-1.0
   main-is:          BoolTest.hs
-  build-depends:    base >=4.5, HUnit ==1.2.*, parsec ==3.1.*, antish
+  build-depends:    base >=4.5, HUnit ==1.2.*, parsec ==3.1.*, containers >=0.4, antish
   hs-source-dirs:   testsuite/parser, src/
 
 test-suite bool-paren-test
   type:             exitcode-stdio-1.0
   main-is:          BoolParensTest.hs
-  build-depends:    base >=4.5, HUnit ==1.2.*, parsec ==3.1.*, QuickCheck ==2.6.*, antish
+  build-depends:    base >=4.5, HUnit ==1.2.*, parsec ==3.1.*, QuickCheck ==2.6.*, containers >=0.4, antish
   hs-source-dirs:   testsuite/parser, src/
 
 test-suite compiler-test

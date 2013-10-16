@@ -72,8 +72,7 @@ instance ToTree BoolExpr where
 --  show t = drawTree $ toTree t
 
 -- pretty printing program
-{-
- - instance Show Program where
+instance Show Program where
 	show (Program s) = '\n' : show s
 instance Show StmBlock where
 	show = showBlock 0 
@@ -106,5 +105,3 @@ showBind n (FunDecl i args ss) = show i ++ show args ++ " {\n" ++ showBlock (n+1
 
 indent :: Int -> String
 indent k = concat ["  " | r <- [0..k]]
-
---}
