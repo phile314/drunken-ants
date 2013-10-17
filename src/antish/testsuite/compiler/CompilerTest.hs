@@ -38,7 +38,7 @@ wrongNumberParameters = expected ~=? actual
         foo = "foo"
         expected = WrongNumberParameters foo 1 2
         actual = either id (error "Compilation should fail") result
-        result = runCompile (compile input) (CState 0 funEnv Scope.empty (+1) (Just 0))
+        result = runCompile (compile input) (CState 0 funEnv Scope.empty (+1) [0])
         funEnv = Scope.insert foo (2, undefined) Scope.empty 
 
 -- | Tests that the proper CError is returned when an invalid marker is used.
