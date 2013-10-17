@@ -52,7 +52,6 @@ pFor = For <$> (reserved "for" *> optionMaybe iterVar) <*> list <*> pStmBlock
 
 pTry :: GenParser Char st Statement
 pTry = Try <$> (reserved "try" *> pStmBlock)  <*> 
-               (reserved "with" *> pStmBlock) <*> 
                (reserved "catch" *> pStmBlock)
 
 

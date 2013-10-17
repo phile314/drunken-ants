@@ -2,7 +2,8 @@ let turnBack = { for [1,2,3] turn },
     goHome = move ,
     findFood = {
      move;
-     try pickUp with {
+     try {
+       pickUp;
        turnBack;
         goHome;
         drop;

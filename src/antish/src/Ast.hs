@@ -21,7 +21,7 @@ data Statement =
     FunCall Identifier [Expr]
   | IfThenElse BoolExpr StmBlock (Maybe StmBlock)
   | For (Maybe Identifier) [Expr] StmBlock
-  | Try StmBlock StmBlock StmBlock
+  | Try StmBlock StmBlock
   | Let [Binding] StmBlock
   | WithProb Double StmBlock StmBlock
   deriving Eq
@@ -67,7 +67,7 @@ instance ToTree Statement where
   toTree (FunCall id exs)      = Node ("FunCall " ++ id) (map toTree exs)
   toTree (IfThenElse c s1 s2)  = Node "IfThenElse" [toTree c, toTree s1, toTree s2]
   toTree (For id es ss)        = Node "For" [(Node (show id) []), toTree es, toTree ss]
-  toTree (Try s1 s2 s3)        = Node "Try" [toTree s1, toTree s2, toTree s3]
+  toTree (Try s1 s2)        = Node "Try" [toTree s1, toTree s2]
   toTree (Let bs ss)           = Node "Let" [toTree bs, toTree ss]
   toTree (WithProb p s1 s2)    = Node "WithProb" [(Node (show p) []), toTree s1, toTree s2]
 
