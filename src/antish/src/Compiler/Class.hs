@@ -14,8 +14,10 @@ import Compiler.Scope as Scope
 
 -- | The state used in the Compile monad
 data CState = CState {   currentState :: AntState -- ^ The first available state
-                       , functions :: Scope Identifier FunDef
-                       , variables :: Scope Identifier VarDef
+                       , functions :: Scope Identifier FunDef -- ^ The functions scope environment
+                       , variables :: Scope Identifier VarDef -- ^ The variables scope environment
+                       , jumpTo    :: (AntState -> AntState)  -- ^ Given the current state returns the state where to jump after the current instruction have been executed
+                       , onFailure :: (Maybe AntState)        -- ^ Where to jump on failure
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
@@ -26,7 +28,7 @@ type VarDef = Expr
 
 -- | The empty CState
 empty :: CState
-empty = CState 0 Scope.empty Scope.empty
+empty = CState 0 Scope.empty Scope.empty (+1) (Just 0)
 
 -- | Updates 'currentState' so that it points to an available state after producing some assembly code
 update :: [Instruction] -> Compile CState ()
@@ -95,7 +97,9 @@ instance (Compilable a) => Compilable (Maybe a) where
   compile Nothing = return []
 
 instance (Compilable a) => Compilable [a] where
-  compile xs = undefined
+  compile xs = do
+      i <- mapM compile xs
+      return $ concat i
 
 instance Compilable Program where
   compile (Program smb) = compile smb
@@ -131,6 +135,16 @@ instance Compilable Statement where
     removeScope
     return i 
 
+  compile (MarkCall n) | 0 <= n && n <= 5 = do
+    s <- get
+    let current = currentState s
+        result = [Mark n current]
+    update result
+    return result
+
+  compile (MarkCall n) = throwError $ InvalidMarkerNumber n
+
+-------------------------------------------------------------------------------
 -- | This class represents something that can be preprocessed but some information has not been provided 
 -- yet for it to be fully compiled, like for instance function declaration and variable access.
 class PreCompilable c where

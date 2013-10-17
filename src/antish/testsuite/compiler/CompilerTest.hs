@@ -20,7 +20,7 @@ main = do
 
 -- | The tests that will be run
 tests :: Test
-tests = TestList [notInScope, wrongNumberParameters]
+tests = TestList [notInScope, wrongNumberParameters, invalidMarker]
 
 -- | Tests that the proper CError is returned when a non-scoped function is used
 notInScope :: Test
@@ -38,5 +38,14 @@ wrongNumberParameters = expected ~=? actual
         foo = "foo"
         expected = WrongNumberParameters foo 1 2
         actual = either id (error "Compilation should fail") result
-        result = runCompile (compile input) (CState 0 funEnv Scope.empty)
+        result = runCompile (compile input) (CState 0 funEnv Scope.empty (+1) (Just 0))
         funEnv = Scope.insert foo (2, undefined) Scope.empty 
+
+-- | Tests that the proper CError is returned when an invalid marker is used.
+invalidMarker :: Test
+invalidMarker = expected ~=? actual
+  where invalidMarkNumber = 10
+        input = MarkCall invalidMarkNumber
+        expected = InvalidMarkerNumber invalidMarkNumber
+        actual = either id (error "Compilation should fail") result
+        result = runCompile (compile input) empty
