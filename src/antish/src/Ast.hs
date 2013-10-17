@@ -76,9 +76,10 @@ instance ToTree Expr where
   toTree (VarAccess id) = Node ("VarAccess " ++ id) []
 
 instance ToTree BoolExpr where
+  toTree (Not b1)    = Node "Not" [toTree b1]
   toTree (And b1 b2) = Node "And" [toTree b1, toTree b2]
   toTree (Or  b1 b2) = Node "Or"  [toTree b1, toTree b2]
-
+  toTree (Condition c d) = Node ("Condition " ++ show c ++ " " ++ show d) []
 
 showTree :: ToTree a => a -> String
 showTree t = drawTree $ toTree t
