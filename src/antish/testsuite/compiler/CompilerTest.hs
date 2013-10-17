@@ -8,7 +8,6 @@ import Compiler.Error
 import Ast
 import Compiler.Class
 import Compiler.Compile
-import qualified Compiler.Scope as Scope
 
 -- | The entry point of the test suite
 main :: IO ()
@@ -25,27 +24,26 @@ tests = TestList [notInScope, wrongNumberParameters, invalidMarker]
 -- | Tests that the proper CError is returned when a non-scoped function is used
 notInScope :: Test
 notInScope = expected ~=? actual
-  where input = FunCall foo []
-        foo = "foo"
-        expected = FunNotInScope foo
+  where expected = FunNotInScope foo
         actual = either id (error "Compilation should fail") result
+        input = FunCall foo []
         result = runCompile (compile input) empty
+        foo = "foo"
 
 -- | Tests that the proper CError is returned when the wrong number of parameters is used
 wrongNumberParameters :: Test
 wrongNumberParameters = expected ~=? actual
-  where input = FunCall foo [undefined]
-        foo = "foo"
-        expected = WrongNumberParameters foo 1 2
+  where expected = WrongNumberParameters foo pActual pExpected
         actual = either id (error "Compilation should fail") result
-        result = runCompile (compile input) (CState 0 funEnv Scope.empty (+1) [0])
-        funEnv = Scope.insert foo (2, undefined) Scope.empty 
+        input = (addFunDecl foo pExpected (\_ -> return [])) >> (compile $ FunCall foo [undefined])
+        result = runCompile input empty
+        (foo, pExpected, pActual) = ("foo", 2, 1)
 
 -- | Tests that the proper CError is returned when an invalid marker is used.
 invalidMarker :: Test
 invalidMarker = expected ~=? actual
-  where invalidMarkNumber = 10
-        input = MarkCall invalidMarkNumber
-        expected = InvalidMarkerNumber invalidMarkNumber
+  where expected = InvalidMarkerNumber invalidMarkNumber
         actual = either id (error "Compilation should fail") result
+        input = MarkCall invalidMarkNumber
         result = runCompile (compile input) empty
+        invalidMarkNumber = 10
