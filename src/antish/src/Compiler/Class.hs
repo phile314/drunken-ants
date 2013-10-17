@@ -11,6 +11,7 @@ import Ast
 import Control.Monad.State hiding (gets)
 import Compiler.Error
 import Compiler.Scope as Scope
+import Data.Maybe
 
 -- | The state used in the Compile monad
 data CState = CState {   currentState :: AntState -- ^ The first available state
@@ -138,6 +139,12 @@ instance Compilable Statement where
     removeScope
     return i 
 
+  compile (For iden xs b) = do
+    bx <- forM xs (\x -> do
+                 let body = precompile b $ maybeToList iden
+                 body [x])
+    generate $ concat bx
+
   compile (MarkCall n) | validMarkerNumber n  = safeFunCall (Mark n)
   compile (MarkCall n) = throwError $ InvalidMarkerNumber n
 
@@ -173,13 +180,11 @@ class PreCompilable c where
   precompile :: c -> [Identifier] -> ([Expr] -> Compile CState [Instruction])
 
 instance PreCompilable StmBlock where
-  precompile (StmBlock xs) argNames = \args -> do 
+  precompile b argNames = \args -> do 
     insertParameters argNames args
-    i <- compile xs
+    i <- compile b
     removeScope      -- Parameters Scope
-    removeScope      -- Block Scope -- TODO should be removed by block
     return i
-    
 -------------------------------------------------------------------------------
 -- | Checks if the 'MarkerNumber' given is valid
 validMarkerNumber :: MarkerNumber -> Bool

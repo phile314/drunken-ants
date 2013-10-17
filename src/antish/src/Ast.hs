@@ -24,9 +24,9 @@ data Statement =
   | Try StmBlock StmBlock StmBlock
   | Let [Binding] StmBlock
   | WithProb Double StmBlock StmBlock
-  | MarkCall Int
-  | UnMarkCall Int
-  | TurnCall LeftOrRight
+  | MarkCall Int              -- TODO replace with Expr
+  | UnMarkCall Int            -- TODO replace with Expr
+  | TurnCall LeftOrRight      -- TODO replace with Expr
   | DropCall
   | MoveCall
   deriving Eq
