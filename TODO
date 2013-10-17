@@ -1,3 +1,9 @@
+
+-ask atze about gadts/exprs  [ph]
+-add option parsing to main [ph]
+-maybe do some compiling stuff [ph]
+
+
 -- Grammar
 What is the difference between VIdent and CIdent in FunIdentifier ? (Removed now)
 
