@@ -3,25 +3,35 @@ module Main where
 import Parser
 import System.Environment
 import Ast
+import Options.Applicative
+
+
+data Options = Options
+  { showAST :: Bool
+  , srcFile :: String }
 
 -- TODO
-main :: IO ()
-main = do
-  args <- getArgs
-  let [file] = args
-  res <- parseFile file
-  case res of
+options :: Parser Options
+options = Options
+  <$> switch ( long "show-ast" <> short 's' <> help "Show generated AST Tree." )
+  <*> argument str ( metavar "SRC" )
+
+
+run :: Options -> IO ()
+run opts = do
+  ast <- parseFile (srcFile opts)
+
+  case ast of
     (Right t) -> print (UseTree t)
     (Left er) -> print er
+
+
+main :: IO ()
+main = execParser opts >>= run
+  where
+    opts = info (helper <*> options)
+      ( fullDesc <> progDesc "Compiles High-level Ant Code to Low-level Ant Code.")
+
   
  
-{-
-testing file = do
-	exiting <- doesFileExist file
-	if exiting then do
-		f <- readFile file
-		print $ parse pProgram "" f
-	else 
-		print "Stupid you"
--}
 
