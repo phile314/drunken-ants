@@ -28,7 +28,7 @@ data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show,Eq)
 
 type MarkerNumber = Int -- 0..5
 
-data LeftOrRight = IsLeft | IsRight deriving Show
+data LeftOrRight = IsLeft | IsRight deriving (Show, Eq)
 
 data Cond = Friend | Foe | FriendWithFood | FoeWithFood 
           | Food | Rock | Marker Integer | FoeMarker | Home | FoeHome

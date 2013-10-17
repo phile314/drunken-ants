@@ -11,11 +11,14 @@ import Ast
 import Control.Monad.State hiding (gets)
 import Compiler.Error
 import Compiler.Scope as Scope
+import Data.Maybe
 
 -- | The state used in the Compile monad
 data CState = CState {   currentState :: AntState -- ^ The first available state
-                       , functions :: Scope Identifier FunDef
-                       , variables :: Scope Identifier VarDef
+                       , functions :: Scope Identifier FunDef -- ^ The functions scope environment
+                       , variables :: Scope Identifier VarDef -- ^ The variables scope environment
+                       , jumpTo    :: (AntState -> AntState)  -- ^ Given the current state returns the state where to jump after the current instruction have been executed
+                       , onFailure :: [AntState]        -- ^ Where to jump on failure
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
@@ -26,12 +29,16 @@ type VarDef = Expr
 
 -- | The empty CState
 empty :: CState
-empty = CState 0 Scope.empty Scope.empty
+empty = CState 0 Scope.empty Scope.empty (+1) [0]
 
--- | Updates 'currentState' so that it points to an available state after producing some assembly code
-update :: [Instruction] -> Compile CState ()
-update xs = modify (\s -> s { currentState = (cs s) + length xs} )
-  where cs s = currentState s
+-- | Returns assembly instructions taking care of updating the state correctly.
+-- For instance 'currentState' is generated, so that it points to the next available state
+-- after producing some assembly code
+generate :: [Instruction] -> Compile CState [Instruction]
+generate xs = do
+  (s,cs) <- get >>= \s -> return (s, currentState s) 
+  put (s { currentState = cs + length xs} )
+  return xs
 
 -- | Returns the current variable environment
 varEnv :: Compile CState (Scope Identifier VarDef)
@@ -95,7 +102,9 @@ instance (Compilable a) => Compilable (Maybe a) where
   compile Nothing = return []
 
 instance (Compilable a) => Compilable [a] where
-  compile xs = undefined
+  compile xs = do
+      i <- mapM compile xs
+      return $ concat i
 
 instance Compilable Program where
   compile (Program smb) = compile smb
@@ -111,11 +120,10 @@ instance Compilable Statement where
       Not e1         -> undefined
       Condition c sd -> do
         i1 <- compile b1
-        update i1
+        generate i1
         i2 <- compile b2
         let res = [Sense sd 0 0 c] ++ i1 ++ i2  -- TODO missing correct jump
-        update res
-        return res
+        generate res
 --    _ -> throwError NotBoolean expr -- BoolExpr will be part of Expr soon
 
   compile (FunCall ident args) = do 
@@ -131,16 +139,53 @@ instance Compilable Statement where
     removeScope
     return i 
 
+  compile (For iden xs b) = do
+    bx <- forM xs (\x -> do
+                 let body = precompile b $ maybeToList iden
+                 body [x])
+    generate $ concat bx
+
+  compile (MarkCall n) | validMarkerNumber n  = safeFunCall (Mark n)
+  compile (MarkCall n) = throwError $ InvalidMarkerNumber n
+
+  compile (UnMarkCall n) | validMarkerNumber n = safeFunCall (Unmark n)
+  compile (UnMarkCall n) = throwError $ InvalidMarkerNumber n
+
+  compile DropCall = safeFunCall Drop
+
+  compile MoveCall = unsafeFunCall Move
+
+  compile (TurnCall d) = safeFunCall (Turn d)
+
+-- | Compiles a safe function call (i.e. it cannot fail). After the function call the next instruction is 
+-- executed.
+safeFunCall :: (AntState -> Instruction) -> Compile CState [Instruction]
+safeFunCall f = do
+  s <- get >>= (return . currentState)
+  generate [f s]
+  
+-- | Compiles an unsafe function call. 'onFailure' field from the state is used.
+unsafeFunCall :: (AntState ->  -- ^ Where to jump on normal execution
+                  AntState ->  -- ^ Where to jump on failure
+                  Instruction) -> Compile CState [Instruction]
+unsafeFunCall f = do
+  normal      <- get >>= (return . currentState)
+  (failure:_) <- get >>= (return . onFailure)
+  generate [f normal failure]
+
+-------------------------------------------------------------------------------
 -- | This class represents something that can be preprocessed but some information has not been provided 
 -- yet for it to be fully compiled, like for instance function declaration and variable access.
 class PreCompilable c where
   precompile :: c -> [Identifier] -> ([Expr] -> Compile CState [Instruction])
 
 instance PreCompilable StmBlock where
-  precompile (StmBlock xs) argNames = \args -> do 
+  precompile b argNames = \args -> do 
     insertParameters argNames args
-    i <- compile xs
+    i <- compile b
     removeScope      -- Parameters Scope
-    removeScope      -- Block Scope -- TODO should be removed by block
     return i
-    
+-------------------------------------------------------------------------------
+-- | Checks if the 'MarkerNumber' given is valid
+validMarkerNumber :: MarkerNumber -> Bool
+validMarkerNumber n = 0 <= n && n <= 5
