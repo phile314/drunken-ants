@@ -88,3 +88,6 @@ showTree t = drawTree $ toTree t
 newtype UseTree a = UseTree a
 instance ToTree a => Show (UseTree a) where
   show (UseTree x) = showTree x
+
+instance Show Program where
+	show p = showTree p
