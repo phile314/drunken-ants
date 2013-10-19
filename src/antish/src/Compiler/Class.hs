@@ -1,5 +1,9 @@
 -- | Defines the compiling operations for the elements of the Ast
 
+-- TODO
+-- compileWithJump should be generalized to something that can be used also by the Try instance of compile
+-- A more efficient implementation of assemblyLenght should be provided
+
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 
@@ -36,12 +40,11 @@ instance Compilable Statement where
       And e1 e2      -> undefined
       Or  e1 e2      -> undefined
       Not e1         -> undefined
-      Condition c sd -> do
-        i1 <- compile b1
-        generate i1
-        i2 <- compile b2
-        let res = [Sense sd 0 0 c] ++ i1 ++ i2  -- TODO missing correct jump
-        generate res
+      Condition c sd -> 
+        let ifte s1 s2 = Sense sd s1 s2 c 
+            StmBlock ss1 = b1
+            StmBlock ss2 = fromMaybe (StmBlock []) b2  in-- TODO  Would it better to use [] directly instead of Nothing
+              compileAndReorder ifte ss1 ss2
 --    _ -> throwError NotBoolean expr -- BoolExpr will be part of Expr soon
 
   compile (FunCall ident args) = do 
@@ -64,19 +67,19 @@ instance Compilable Statement where
     generate $ concat bx
 
   compile (WithProb p (StmBlock b1) (StmBlock b2)) | isProbability p = do
-    s0 <- nextState
-    i2 <- compileWithJump b2 (+1)   -- TODO i2 currentState is wrong
-    let l2 = length i2
-    i1 <- compileWithJump b1 (+l2)
-    let s1 = s0 + 1
-        s2 = s0 + length i1
-        odds = round $ 1 / p
-    generate $ [Flip odds s1 s2] ++ i1 ++ i2
+    let odds = round $ 1 / p
+    compileAndReorder (Flip odds) b1 b2
   compile (WithProb p _ _) = throwError $ InvalidProbability p
 
-  compile (Try b1 b2) = do
-    i1 <- compile b1
-    i2 <- compile b2
+  -- Cannot use compileAndReorder due to the failure handling (must be active only within b1)
+  compile (Try (StmBlock b1) (StmBlock b2)) = do  
+    s0 <- nextState
+    l1 <- assemblyLength b1
+    l2 <- assemblyLength b2
+    setOnFailure (s0 + l1)
+    i1 <- compileWithJump b1 (+l2)
+    unsetOnFailure
+    i2 <- compileWithJump b2 (+1)
     generate $ i1 ++ i2
 
   compile (MarkCall n) | validMarkerNumber n  = safeFunCall (Mark n)
@@ -105,14 +108,7 @@ instance PreCompilable StmBlock where
     removeScope      -- Parameters Scope
     generate i
 
-compileWithFailure :: StmBlock -> (AntState -> Compile CState [Instruction])
-compileWithFailure sb = \failure -> do
-    setOnFailure failure
-    i <- compile sb
-    unsetOnFailure
-    return i 
-
--- | @'compileWithJump' xs j@ compile the 'Compiable' elements contained in @xs@, so that on normal execution
+-- | @'compileWithJump' xs j@ compiles the 'Compiable' elements contained in @xs@, so that on normal execution
 -- they are executed sequentially and after that the control flow jumpt to @j@.
 compileWithJump :: Compilable a => 
                    [a]                   -- ^ What is going to be compied
@@ -129,6 +125,43 @@ compileWithJump xs after = do
           setJumpTo (+1)
           compile x
  
+-- | @compileAndReorder inst b1 b2@ compiles a piece of assembly code so that 
+--
+-- [ inst ] s0
+--
+-- [ b1   ] s1  = s0 + 1
+--
+-- [ ...  ]
+--
+-- [ b2   ] s2 = s1 + |b1|
+--
+-- [ ...  ] 
+--
+-- [ b3   ] s3 = s2 + |b2|
+--
+-- inst is executed, based on the instruction the control flow jumps to either @s1@ or @s2@, after one of 
+-- this blocks is executed the control flows jump to @s3@
+compileAndReorder :: (Compilable a) => (AntState -> AntState -> Instruction) -- ^ The first instruction of the compiled code
+                    -> [a]          -- ^ First assembly code block starting on @s1@
+                    -> [a]          -- ^ Second assembly code block starting on @s2@
+                    -> Compile CState [Instruction]
+compileAndReorder inst b1 b2 = do
+    s0 <- nextState
+    l2 <- assemblyLength b2
+    i1 <- compileWithJump b1 (+l2)
+    i2 <- compileWithJump b2 (+1)
+    let s1 = s0 + 1
+        s2 = s0 + length i1
+    generate $ [inst s1 s2] ++ i1 ++ i2
+
+-- | Returns the length of the assembly code generated when compiling a 'StmBlock'.
+assemblyLength :: Compilable a => a -> Compile CState Int
+assemblyLength b = do 
+  s <- get
+  case runCompile (compile b) s of    -- TODO can we avoid to compile twice?
+    Right (i,_) -> return $ length i
+    Left e      -> throwError e
+
 -------------------------------------------------------------------------------
 -- Utility functions
 
