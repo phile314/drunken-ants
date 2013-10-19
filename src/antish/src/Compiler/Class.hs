@@ -2,7 +2,8 @@
 
 -- TODO
 -- compileWithJump should be generalized to something that can be used also by the Try instance of compile
--- A more efficient implementation of assemblyLenght should be provided
+-- A more efficient implementation of assemblyLenght should be provided, in addition a class for this 
+-- feature should be declared and instance for each compilable element shold be provided
 
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -21,11 +22,11 @@ class Compilable c where
   -- | Returns a monadic computation that performs the compilation
   compile :: c -> Compile CState [Instruction]
   
-instance (Compilable a) => Compilable (Maybe a) where
+instance Compilable a => Compilable (Maybe a) where
   compile (Just x) = compile x
   compile Nothing = return []
 
-instance (Compilable a) => Compilable [a] where
+instance Compilable a => Compilable [a] where
   compile xs = getJumpTo >>= compileWithJump xs
  
 instance Compilable Program where
@@ -40,11 +41,8 @@ instance Compilable Statement where
       And e1 e2      -> undefined
       Or  e1 e2      -> undefined
       Not e1         -> undefined
-      Condition c sd -> 
-        let ifte s1 s2 = Sense sd s1 s2 c 
-            StmBlock ss1 = b1
-            StmBlock ss2 = fromMaybe (StmBlock []) b2  in-- TODO  Would it better to use [] directly instead of Nothing
-              compileAndReorder ifte ss1 ss2
+      Condition c sd -> let ifte s1 s2 = Sense sd s1 s2 c in
+              compileAndReorder ifte b1 b2
 --    _ -> throwError NotBoolean expr -- BoolExpr will be part of Expr soon
 
   compile (FunCall ident args) = do 
@@ -66,13 +64,13 @@ instance Compilable Statement where
                  body [x])
     generate $ concat bx
 
-  compile (WithProb p (StmBlock b1) (StmBlock b2)) | isProbability p = do
+  compile (WithProb p b1 b2) | isProbability p = do
     let odds = round $ 1 / p
     compileAndReorder (Flip odds) b1 b2
   compile (WithProb p _ _) = throwError $ InvalidProbability p
 
   -- Cannot use compileAndReorder due to the failure handling (must be active only within b1)
-  compile (Try (StmBlock b1) (StmBlock b2)) = do  
+  compile (Try b1 b2) = do  
     s0 <- nextState
     l1 <- assemblyLength b1
     l2 <- assemblyLength b2
@@ -108,23 +106,38 @@ instance PreCompilable StmBlock where
     removeScope      -- Parameters Scope
     generate i
 
--- | @'compileWithJump' xs j@ compiles the 'Compiable' elements contained in @xs@, so that on normal execution
--- they are executed sequentially and after that the control flow jumpt to @j@.
-compileWithJump :: Compilable a => 
-                   [a]                   -- ^ What is going to be compied
-                -> (AntState -> AntState) -- ^ Where to jump after this piece of code
-                -> Compile CState [Instruction]
-compileWithJump []  _    = return []
-compileWithJump [x] j    = setJumpTo j >> compile x
-compileWithJump xs after = do
-    let (xs', z) = (init xs, last xs)
-    cs <- mapM justNext xs'
-    cz <- setJumpTo after >> compile z 
-    generate $ (concat cs) ++ cz
-  where justNext x = do 
-          setJumpTo (+1)
-          compile x
- 
+-------------------------------------------------------------------------------
+-- Jumpable Definition
+
+-- | Represents some code that requires some jump in the control flow
+class Compilable c => Jumpable c where
+  
+  -- | @'compileWithJump' xs j@ compiles the 'Compiable' elements contained in @xs@, so that on normal execution
+  -- they are executed sequentially and after that the control flow jumpt to @j@.
+  compileWithJump :: c                          -- ^ What is going to be compied
+                  -> (AntState -> AntState)     -- ^ Where to jump after this piece of code
+                  -> Compile CState [Instruction]
+
+instance Compilable c => Jumpable [c] where
+  compileWithJump []  _    = return []
+  compileWithJump [x] j    = setJumpTo j >> compile x
+  compileWithJump xs after = do
+      let (xs', z) = (init xs, last xs)
+      cs <- mapM justNext xs'
+      cz <- setJumpTo after >> compile z 
+      generate $ (concat cs) ++ cz
+    where justNext x = do 
+            setJumpTo (+1)
+            compile x
+
+instance Jumpable c => Jumpable (Maybe c) where
+  compileWithJump (Just c) j = compileWithJump c j
+  compileWithJump Nothing  _ = return []
+
+instance Jumpable StmBlock where
+  compileWithJump (StmBlock xs) = compileWithJump xs
+
+-------------------------------------------------------------------------------
 -- | @compileAndReorder inst b1 b2@ compiles a piece of assembly code so that 
 --
 -- [ inst ] s0
@@ -141,9 +154,10 @@ compileWithJump xs after = do
 --
 -- inst is executed, based on the instruction the control flow jumps to either @s1@ or @s2@, after one of 
 -- this blocks is executed the control flows jump to @s3@
-compileAndReorder :: (Compilable a) => (AntState -> AntState -> Instruction) -- ^ The first instruction of the compiled code
-                    -> [a]          -- ^ First assembly code block starting on @s1@
-                    -> [a]          -- ^ Second assembly code block starting on @s2@
+compileAndReorder :: (Jumpable a, Jumpable b) => 
+                       (AntState -> AntState -> Instruction) -- ^ The first instruction of the compiled code
+                    -> a          -- ^ First assembly code block starting on @s1@
+                    -> b          -- ^ Second assembly code block starting on @s2@
                     -> Compile CState [Instruction]
 compileAndReorder inst b1 b2 = do
     s0 <- nextState
