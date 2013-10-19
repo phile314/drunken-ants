@@ -12,8 +12,13 @@ module Compiler.Compile (
     , addVarDecl
     , addFunDecl
     , nextState
-    , onFail
+    , setJumpTo
+    , getJumpTo
+    , getOnFailure
+    , setOnFailure
+    , unsetOnFailure
     , runCompile
+    , goNext
   ) where
 
 import Control.Monad.State
@@ -35,7 +40,7 @@ runCompile c s = runIdentity $ runCompileT c s
 data CState = CState {   currentState :: AntState -- ^ The first available state
                        , functions :: Scope Identifier FunDef -- ^ The functions scope environment
                        , variables :: Scope Identifier VarDef -- ^ The variables scope environment
-                       , jumpTo    :: (AntState -> AntState)  -- ^ Given the current state returns the state where to jump after the current instruction have been executed
+                       , jumpTo    :: (AntState -> AntState)  -- ^ Returns where to jump after the current instruction have been executed if it succeds
                        , onFailure :: [AntState]        -- ^ Where to jump on failure
                      } 
 
@@ -126,5 +131,27 @@ nextState :: Compile CState AntState
 nextState = get >>= (return . currentState)
 
 -- | Returns where to jump in case of failure
-onFail:: Compile CState AntState
-onFail = get >>= (return . head .onFailure)
+getOnFailure :: Compile CState AntState
+getOnFailure = get >>= (return . head . onFailure)
+
+-- | Returns where to jump next on normal execution based.
+getJumpTo :: Compile CState (AntState -> AntState)
+getJumpTo = get >>= return . jumpTo
+
+-- | Returns the state where to jump on normal execution based on the current state
+goNext  :: Compile CState AntState
+goNext = do
+  s <- get 
+  return $ (jumpTo s) (currentState s)
+
+-- | Sets the 'onJump' function that returns the 'AntState' where to jump on normal execution
+setJumpTo :: (AntState -> AntState) -> Compile CState ()
+setJumpTo jn = modify $ \s -> s { jumpTo = jn }
+
+-- | Sets locally the 'AntState' where to jump in case of failure
+setOnFailure :: AntState -> Compile CState ()
+setOnFailure as = modify $ \s -> s {onFailure = as:(onFailure s)}
+
+-- | Unsets the local defined 'AntState' used for jumping on failures.
+unsetOnFailure :: Compile CState ()
+unsetOnFailure = modify $ \s -> s { onFailure = tail (onFailure s) }
