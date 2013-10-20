@@ -8,6 +8,7 @@ import Compiler.Class
 import Compiler.Compile
 import Util
 
+-- | The tests that will be run
 forTests :: Test
 forTests = TestLabel "For" $ TestList [emptyFor, simpleFor, moreInstructionBody]
 

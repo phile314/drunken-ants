@@ -15,7 +15,7 @@ data Program = Program StmBlock
   deriving Eq
 
 data StmBlock = StmBlock [Statement]
-  deriving Eq
+  deriving (Eq, Show)
 
 data Statement =
     FunCall Identifier [Expr]
@@ -28,13 +28,14 @@ data Statement =
   | UnMarkCall Int            -- TODO replace with Expr
   | TurnCall LeftOrRight      -- TODO replace with Expr
   | DropCall
+  | PickUpCall
   | MoveCall
-  deriving Eq
+  deriving (Eq, Show)
 
 data Binding =
     VarDecl Identifier Expr
   | FunDecl Identifier [Identifier] StmBlock
-  deriving Eq
+  deriving (Eq, Show)
 
 data BoolExpr =
     And BoolExpr BoolExpr

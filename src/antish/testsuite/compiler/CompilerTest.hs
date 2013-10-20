@@ -8,9 +8,12 @@ import Ast
 import IfThenElseTest
 import ErrorTest
 import ForTest
+import TryTest
+import ProbTest
 
+-- | The tests that will be run
 tests :: Test
-tests = TestLabel "Compiler" $ TestList [errorTests, ifThenElseTests, forTests]
+tests = TestLabel "Compiler" $ TestList [errorTests, ifThenElseTests, forTests, tryTests, withProbTests]
 
 -- | The entry point of the test suite
 main :: IO ()

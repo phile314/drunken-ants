@@ -13,7 +13,7 @@ module Compiler.Class where
 import Assembly (Instruction, AntState) 
 import Compiler.Compile
 import Ast
-import Control.Monad.State hiding (gets)
+import Control.Monad.State
 import Compiler.Error
 import Data.Maybe
 
@@ -74,9 +74,9 @@ instance Compilable Statement where
     l1 <- assemblyLength b1
     l2 <- assemblyLength b2
     setOnFailure (s0 + l1)
-    i1 <- compileWithJump b1 (+l2)
+    i1 <- compileWithJump b1 (+ succ l2)
     unsetOnFailure
-    i2 <- compileWithJump b2 (+1)
+    i2 <- compileWithJump b2 succ
     return $ i1 ++ i2
 
   compile (MarkCall n) | validMarkerNumber n  = safeFunCall (Mark n)
@@ -86,6 +86,8 @@ instance Compilable Statement where
   compile (UnMarkCall n) = throwError $ InvalidMarkerNumber n
 
   compile DropCall = safeFunCall Drop
+
+  compile PickUpCall = unsafeFunCall PickUp
 
   compile MoveCall = unsafeFunCall Move -- TODO before the next Move you should wait 
 
