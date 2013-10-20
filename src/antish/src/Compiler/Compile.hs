@@ -12,6 +12,7 @@ module Compiler.Compile (
     , addVarDecl
     , addFunDecl
     , nextState
+    , consumeNextState
     , setJumpTo
     , getJumpTo
     , getOnFailure
@@ -31,6 +32,7 @@ import Assembly (Instruction, AntState)
 
 type Compile s a = CompileT s Identity a
 
+-- | Runs the 'Compile' monad
 runCompile :: Compile s a -> s -> Either CError (a ,s)
 runCompile c s = runIdentity $ runCompileT c s
 
@@ -129,6 +131,14 @@ removeScope = do
 -- | Returns the first available 'AntState'
 nextState :: Compile CState AntState
 nextState = get >>= (return . currentState)
+
+-- | Returns the first available 'AntState' and updates the current 'AntState' with a new available state
+consumeNextState :: Compile CState AntState
+consumeNextState = do
+  s <- get
+  let ns = currentState s
+  put $ s { currentState = ns + 1}
+  return ns
 
 -- | Returns where to jump in case of failure
 getOnFailure :: Compile CState AntState

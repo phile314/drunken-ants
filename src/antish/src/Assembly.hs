@@ -22,7 +22,7 @@ data Instruction
    | Turn LeftOrRight AntState
    | Move AntState AntState
    | Flip Int AntState AntState
- deriving Show
+ deriving (Show, Eq)
 
 data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show,Eq)
 

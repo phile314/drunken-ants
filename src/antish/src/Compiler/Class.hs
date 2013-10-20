@@ -16,7 +16,6 @@ import Ast
 import Control.Monad.State hiding (gets)
 import Compiler.Error
 import Data.Maybe
-import Control.Applicative
 
 class Compilable c where
   -- | Returns a monadic computation that performs the compilation
@@ -62,7 +61,7 @@ instance Compilable Statement where
     bx <- forM xs (\x -> do
                  let body = precompile b $ maybeToList iden
                  body [x])
-    generate $ concat bx
+    return $ concat bx
 
   compile (WithProb p b1 b2) | isProbability p = do
     let odds = round $ 1 / p
@@ -78,7 +77,7 @@ instance Compilable Statement where
     i1 <- compileWithJump b1 (+l2)
     unsetOnFailure
     i2 <- compileWithJump b2 (+1)
-    generate $ i1 ++ i2
+    return $ i1 ++ i2
 
   compile (MarkCall n) | validMarkerNumber n  = safeFunCall (Mark n)
   compile (MarkCall n) = throwError $ InvalidMarkerNumber n
@@ -104,7 +103,7 @@ instance PreCompilable StmBlock where
     insertParameters argNames args
     i <- compile b
     removeScope      -- Parameters Scope
-    generate i
+    return i
 
 -------------------------------------------------------------------------------
 -- Jumpable Definition
@@ -125,7 +124,7 @@ instance Compilable c => Jumpable [c] where
       let (xs', z) = (init xs, last xs)
       cs <- mapM justNext xs'
       cz <- setJumpTo after >> compile z 
-      generate $ (concat cs) ++ cz
+      return $ (concat cs) ++ cz
     where justNext x = do 
             setJumpTo (+1)
             compile x
@@ -160,13 +159,13 @@ compileAndReorder :: (Jumpable a, Jumpable b) =>
                     -> b          -- ^ Second assembly code block starting on @s2@
                     -> Compile CState [Instruction]
 compileAndReorder inst b1 b2 = do
-    s0 <- nextState
+    s0 <- consumeNextState
     l2 <- assemblyLength b2
-    i1 <- compileWithJump b1 (+l2)
-    i2 <- compileWithJump b2 (+1)
-    let s1 = s0 + 1
-        s2 = s0 + length i1
-    generate $ [inst s1 s2] ++ i1 ++ i2
+    i1 <- compileWithJump b1 (+ succ l2)
+    i2 <- compileWithJump b2 succ
+    let s1 = succ s0
+        s2 = s1 + length i1
+    return $ [inst s1 s2] ++ i1 ++ i2
 
 -- | Returns the length of the assembly code generated when compiling a 'StmBlock'.
 assemblyLength :: Compilable a => a -> Compile CState Int
@@ -192,9 +191,10 @@ safeFunCall f = do
   generate [f s]
   
 -- | Compiles an unsafe function call. 'onFailure' field from the state is used.
-unsafeFunCall :: (AntState ->  -- ^ Where to jump on normal execution
-                  AntState ->  -- ^ Where to jump on failure
-                  Instruction) -> Compile CState [Instruction]
+unsafeFunCall :: (   AntState      -- ^ Where to jump on normal execution
+                  -> AntState      -- ^ Where to jump on failure
+                  -> Instruction)
+                  -> Compile CState [Instruction]
 unsafeFunCall f = do
   normal      <- goNext 
   failure     <- getOnFailure
