@@ -23,7 +23,7 @@ simpleIf = testCode expected input
         input = compile simple
         simple = IfThenElse (Condition Foe Here) bThen bElse
         bThen = StmBlock [DropCall]
-        bElse = Just $ StmBlock [MarkCall (ConstInt 1)]
+        bElse = StmBlock [MarkCall (ConstInt 1)]
 
 -- | Only if branch, no else
 --
@@ -34,5 +34,6 @@ simpleIf = testCode expected input
 onlyIf = testCode expected input
   where expected = [Sense Here 1 2 Foe, Drop 2, Mark 1 3]
         input = compile $ StmBlock [ifte, MarkCall (ConstInt 1)]
-        ifte = IfThenElse (Condition Foe Here) bThen Nothing
+        ifte = IfThenElse (Condition Foe Here) bThen bElse
         bThen = StmBlock [DropCall]
+        bElse = StmBlock []

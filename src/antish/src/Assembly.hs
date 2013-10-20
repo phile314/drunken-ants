@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Assembly (
     Instruction (..)
   , Cond (..)
@@ -7,6 +9,8 @@ module Assembly (
   , AntState
   , AssemblyFrag
   ) where
+
+import Data.Data
 
 -- FIX copy and paste:  it would be nice to import this directly from the Simulator mode 
 type AntState = Int 
@@ -24,12 +28,12 @@ data Instruction
    | Flip Int AntState AntState
  deriving (Show, Eq)
 
-data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show,Eq)
+data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show, Eq, Data, Typeable)
 
 type MarkerNumber = Int -- 0..5
 
-data LeftOrRight = IsLeft | IsRight deriving (Show, Eq)
+data LeftOrRight = IsLeft | IsRight deriving (Show, Eq, Data, Typeable)
 
 data Cond = Friend | Foe | FriendWithFood | FoeWithFood 
           | Food | Rock | Marker Integer | FoeMarker | Home | FoeHome
-            deriving (Show, Eq)
+            deriving (Show, Eq, Data, Typeable)

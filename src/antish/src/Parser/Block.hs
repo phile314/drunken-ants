@@ -7,7 +7,7 @@ import Parser.LangDef
 import Parser.Boolean
 import Text.Parsec.Combinator
 
-pStmBlock :: GenParser Char st StmBlock
+pStmBlock :: GenParser Char st Statement
 pStmBlock = StmBlock <$> (moreStatements <|> oneStatement)
   where moreStatements = braces $ pStatement `sepBy1` semi 
         oneStatement   = count 1 pStatement
@@ -18,7 +18,7 @@ pStatement = choice $ map try [pIfThenElse, pLet, pFor, pTry, pFunCall]
 pIfThenElse :: GenParser Char st Statement
 pIfThenElse = IfThenElse <$> (reserved "if" *> pBoolExpr) <*> 
                              (reserved "then" *> pStmBlock) <*> 
-                             optionMaybe (reserved "else" *> pStmBlock) 
+                             ((reserved "else" *> pStmBlock) <|> (pure (StmBlock [])))
 
 pExpr :: GenParser Char st Expr
 pExpr = pInt 
