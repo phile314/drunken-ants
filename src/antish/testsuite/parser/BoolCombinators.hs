@@ -1,11 +1,15 @@
 -- | This module provides utility functions for tests related to boolean.
 
+{-# LANGUAGE TypeSynonymInstances #-}
+
 module BoolCombinators where
 
 import Ast
 import Assembly
 import Test.QuickCheck
 import Control.Monad
+
+type BoolExpr = Expr
 
 instance Arbitrary BoolExpr where
   arbitrary = oneof [ simpleBoolGen,

@@ -6,6 +6,7 @@ module Compiler.Compile (
     , generate
     , CState
     , lookupFun
+    , lookupVar
     , newScope
     , removeScope
     , insertParameters
@@ -106,13 +107,22 @@ insertParameters args values = do
   modify $ \s -> s { variables = newEnv }
 
 -- | The identifier is looked up among the declared functions.
--- If the function is not in scope the monad throwErrors.
+-- If the function is not in scope the monad fails with a 'CError'.
 lookupFun :: Identifier -> Compile CState FunDef
 lookupFun iden = do 
   env <- funEnv
   case Scope.lookup iden env of
     Just def -> return def 
     Nothing -> throwError $ FunNotInScope iden 
+
+-- | The identifier is looked up among the scoped variables.
+-- If the variable is not in scope the monad fails with a 'CError'.
+lookupVar :: Identifier -> Compile CState Expr
+lookupVar iden = do  
+  env <- varEnv
+  case Scope.lookup iden env of
+    Just expr -> return expr
+    Nothing -> throwError $ VarNotInScope iden
 
 -- | Add a new empty scope both for function and variables as the current scope
 newScope :: Compile CState ()

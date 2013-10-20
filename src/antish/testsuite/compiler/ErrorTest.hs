@@ -32,7 +32,7 @@ invalidMarker :: Test
 invalidMarker = testError expected input
   where invalidMarkNumber = 10
         expected = InvalidMarkerNumber invalidMarkNumber
-        input = compile $ MarkCall invalidMarkNumber
+        input = compile $ MarkCall (ConstInt 10)   -- TODO fix afer Integer -> Int change
 
 -- | Tests that the proper 'CError' is returned when an invalid probability is used
 invalidProbability :: Test

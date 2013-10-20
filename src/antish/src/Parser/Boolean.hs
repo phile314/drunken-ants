@@ -2,7 +2,7 @@
 
 module  Parser.Boolean where
 
-import Ast ( BoolExpr (..), Cond (..), SenseDir(..))
+import Ast ( Expr (..), Cond (..), SenseDir(..))
 import Control.Applicative
 import Text.Parsec.String
 import Text.Parsec.Combinator 
@@ -12,7 +12,7 @@ import Text.Parsec.Expr
 import Text.Read hiding (parens, choice)
 
 -- | Parses a (parenthesized) boolean expression
-pBoolExpr :: GenParser Char st BoolExpr
+pBoolExpr :: GenParser Char st Expr
 pBoolExpr    = buildExpressionParser bOperators bTerm
 
 -- | A list defining all the boolean operators, their associativity and prefix - infix - postfix use
@@ -22,7 +22,7 @@ bOperators = [ [ Prefix (reservedOp "!" >> return Not) ]
              ]
 
 -- | Parses a simple condition made by 'Cond' 'Sensedir'
-bTerm :: GenParser Char st BoolExpr
+bTerm :: GenParser Char st Expr
 bTerm = Condition <$> pCond <*> pSenseDir <|> parens pBoolExpr
 
 -- | Parses a 'SenseDir' constant

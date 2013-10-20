@@ -19,13 +19,13 @@ data StmBlock = StmBlock [Statement]
 
 data Statement =
     FunCall Identifier [Expr]
-  | IfThenElse BoolExpr StmBlock (Maybe StmBlock)
+  | IfThenElse Expr StmBlock (Maybe StmBlock)
   | For (Maybe Identifier) [Expr] StmBlock
   | Try StmBlock StmBlock
   | Let [Binding] StmBlock
   | WithProb Double StmBlock StmBlock
-  | MarkCall Int              -- TODO replace with Expr
-  | UnMarkCall Int            -- TODO replace with Expr
+  | MarkCall Expr 
+  | UnMarkCall Expr
   | TurnCall LeftOrRight      -- TODO replace with Expr
   | DropCall
   | PickUpCall
@@ -37,16 +37,13 @@ data Binding =
   | FunDecl Identifier [Identifier] StmBlock
   deriving (Eq, Show)
 
-data BoolExpr =
-    And BoolExpr BoolExpr
-  | Or  BoolExpr BoolExpr
-  | Not BoolExpr
-  | Condition Cond SenseDir
-  deriving (Eq, Show)
-
 data Expr =
-  ConstInt Integer
+    ConstInt Integer
   | VarAccess Identifier
+  | And Expr Expr
+  | Or  Expr Expr
+  | Not Expr
+  | Condition Cond SenseDir
   deriving (Eq, Show)
 
 class ToTree a where
@@ -80,8 +77,6 @@ instance ToTree Statement where
 instance ToTree Expr where
   toTree (ConstInt i)   = Node ("ConstInt " ++ (show i)) []
   toTree (VarAccess id) = Node ("VarAccess " ++ id) []
-
-instance ToTree BoolExpr where
   toTree (Not b1)    = Node "Not" [toTree b1]
   toTree (And b1 b2) = Node "And" [toTree b1, toTree b2]
   toTree (Or  b1 b2) = Node "Or"  [toTree b1, toTree b2]

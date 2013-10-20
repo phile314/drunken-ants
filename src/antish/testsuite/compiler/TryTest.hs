@@ -21,7 +21,7 @@ simpleTry = testCode expected input
   where expected = [PickUp 2 1, Drop 2, Mark 1 3]
         input = compile $ StmBlock [try, next]
         try = Try (StmBlock [PickUpCall]) (StmBlock [DropCall])
-        next = MarkCall 1
+        next = MarkCall (ConstInt 1)
 
 -- | Tests a more elaborated try
 --
@@ -41,6 +41,6 @@ complexTry = testCode expected input
         try = [Drop 1, PickUp 2 4, Unmark 1 3, PickUp 6 4]
         catch = [Mark 1 5, Turn IsLeft 6]
         next = [Unmark 1 7, Turn IsRight 8]
-        input = compile $ StmBlock [Try b1 b2, UnMarkCall 1, TurnCall IsRight]
-        b1 = StmBlock [DropCall, PickUpCall, UnMarkCall 1, PickUpCall]
-        b2 = StmBlock [MarkCall 1, TurnCall IsLeft]
+        input = compile $ StmBlock [Try b1 b2, UnMarkCall (ConstInt 1), TurnCall IsRight]
+        b1 = StmBlock [DropCall, PickUpCall, UnMarkCall (ConstInt 1), PickUpCall]
+        b2 = StmBlock [MarkCall (ConstInt 1), TurnCall IsLeft]

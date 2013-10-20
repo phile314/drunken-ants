@@ -35,19 +35,18 @@ instance Compilable StmBlock where
   compile (StmBlock xs) = compile xs
 
 instance Compilable Statement where
-  compile (IfThenElse expr b1 b2) = do
-    case expr of 
-      And e1 e2      -> undefined
-      Or  e1 e2      -> undefined
-      Not e1         -> undefined
-      Condition c sd -> let ifte s1 s2 = Sense sd s1 s2 c in
-              compileAndReorder ifte b1 b2
---    _ -> throwError NotBoolean expr -- BoolExpr will be part of Expr soon
+  compile (IfThenElse expr b1 b2) = evalToBool expr >>= compileIf
+    where compileIf (And e1 e2)      = undefined
+          compileIf (Or  e1 e2)      = undefined
+          compileIf (Not e1)         = undefined
+          compileIf (Condition c sd) = compileAndReorder ifte b1 b2
+            where ifte s1 s2 = Sense sd s1 s2 c 
 
   compile (FunCall ident args) = do 
     (expectedArgs , body) <- lookupFun ident
     let nArgs = length args
-    if nArgs /= expectedArgs then throwError $ WrongNumberParameters ident nArgs expectedArgs
+    if nArgs /= expectedArgs
+      then throwError $ WrongNumberParameters ident nArgs expectedArgs
       else body args
  
   compile (Let bs b) = do
@@ -79,11 +78,16 @@ instance Compilable Statement where
     i2 <- compileWithJump b2 succ
     return $ i1 ++ i2
 
-  compile (MarkCall n) | validMarkerNumber n  = safeFunCall (Mark n)
-  compile (MarkCall n) = throwError $ InvalidMarkerNumber n
+  compile (MarkCall e) = do
+      n <- evalToInt e 
+      if validMarkerNumber n then safeFunCall (Mark n)
+        else throwError $ InvalidMarkerNumber n
 
-  compile (UnMarkCall n) | validMarkerNumber n = safeFunCall (Unmark n)
-  compile (UnMarkCall n) = throwError $ InvalidMarkerNumber n
+  compile (UnMarkCall e) = do
+     n <- evalToInt e
+     if validMarkerNumber n 
+        then safeFunCall (Unmark n)
+        else throwError $ InvalidMarkerNumber n
 
   compile DropCall = safeFunCall Drop
 
@@ -107,6 +111,19 @@ instance PreCompilable StmBlock where
     removeScope      -- Parameters Scope
     return i
 
+-------------------------------------------------------------------------------
+-- Eval functions
+evalToInt :: Expr -> Compile CState Int
+evalToInt (ConstInt i)     = return $ fromIntegral i
+evalToInt (VarAccess iden) = lookupVar iden >>= evalToInt
+evalToInt _ = undefined   -- Throw appropriate error
+ 
+evalToBool c@(Condition cd sd ) = return c
+evalToBool (Not e) = liftM Not (evalToBool e)
+evalToBool (And e1 e2) = liftM2 And (evalToBool e1) (evalToBool e2)
+evalToBool (Or  e1 e2) = liftM2 Or  (evalToBool e1) (evalToBool e2)
+evalToBool (VarAccess iden) = lookupVar iden >>= evalToBool
+evalToBool _                = undefined -- Throw appropriate error
 -------------------------------------------------------------------------------
 -- Jumpable Definition
 

@@ -21,7 +21,9 @@ ifThenElseTests = TestLabel "IfThenElse" $ TestList [simpleIf, onlyIf]
 simpleIf = testCode expected input
   where expected = [Sense Here 1 2 Foe, Drop 3, Mark 1 3]
         input = compile simple
-        simple = IfThenElse (Condition Foe Here) (StmBlock [DropCall]) (Just (StmBlock [MarkCall 1]))
+        simple = IfThenElse (Condition Foe Here) bThen bElse
+        bThen = StmBlock [DropCall]
+        bElse = Just $ StmBlock [MarkCall (ConstInt 1)]
 
 -- | Only if branch, no else
 --
@@ -31,4 +33,6 @@ simpleIf = testCode expected input
 --
 onlyIf = testCode expected input
   where expected = [Sense Here 1 2 Foe, Drop 2, Mark 1 3]
-        input = compile $ StmBlock [IfThenElse (Condition Foe Here) (StmBlock [DropCall]) Nothing, MarkCall 1]
+        input = compile $ StmBlock [ifte, MarkCall (ConstInt 1)]
+        ifte = IfThenElse (Condition Foe Here) bThen Nothing
+        bThen = StmBlock [DropCall]
