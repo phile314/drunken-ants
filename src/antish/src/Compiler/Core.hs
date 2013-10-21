@@ -35,15 +35,17 @@ instance Compilable StmBlock where
 
 instance Compilable Statement where
   compile (IfThenElse expr b1 b2) = eval EBool expr >>= compileIf
-    where compileIf (And e1 e2) = 
-            let if1 = IfThenElse e1 (StmBlock [if2]) b2
-                if2 = IfThenElse e2 b1 (StmBlock []) in
-                compile if1
-          compileIf (Or e1 e2) = 
-            let if1 = IfThenElse e1 b1 (StmBlock [if2])
-                if2 = IfThenElse e2 b1 b2 in                -- TODO replication of b1 could be avoided
-                compile if1
-          compileIf (Not e)          = compile (IfThenElse e b2 b1)
+    where compileIf (And e1 e2) = do
+              [Sense c1 s1 _ sd1] <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
+              if2@((Sense _ s3 s4 _):_) <- compile (IfThenElse e2 b1 b2)
+              return $ (Sense c1 s1 s4 sd1):if2
+          compileIf (Or e1 e2) = do
+              [Sense c1 s0 _ sd1] <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
+              if2@((Sense _ s1 s2 _):_) <- compile (IfThenElse e2 b1 b2)
+              return $ (Sense c1 s1 s0 sd1):if2
+          compileIf (Not e) = do
+            (Sense c s1 s2 sd):xs <- compile (IfThenElse e b1 b2) 
+            return $ (Sense c s2 s1 sd):xs
           compileIf (Condition c sd) = compileAndReorder ifte b1 b2
             where ifte s1 s2 = Sense sd s1 s2 c 
 
