@@ -35,9 +35,15 @@ instance Compilable StmBlock where
 
 instance Compilable Statement where
   compile (IfThenElse expr b1 b2) = eval EBool expr >>= compileIf
-    where compileIf (And e1 e2)      = undefined
-          compileIf (Or  e1 e2)      = undefined
-          compileIf (Not e1)         = undefined
+    where compileIf (And e1 e2) = 
+            let if1 = IfThenElse e1 (StmBlock [if2]) b2
+                if2 = IfThenElse e2 b1 (StmBlock []) in
+                compile if1
+          compileIf (Or e1 e2) = 
+            let if1 = IfThenElse e1 b1 (StmBlock [if2])
+                if2 = IfThenElse e2 b1 b2 in                -- TODO replication of b1 could be avoided
+                compile if1
+          compileIf (Not e)          = compile (IfThenElse e b2 b1)
           compileIf (Condition c sd) = compileAndReorder ifte b1 b2
             where ifte s1 s2 = Sense sd s1 s2 c 
 
