@@ -28,7 +28,7 @@ data Statement =
   | WithProb Double StmBlock StmBlock
   | MarkCall Expr
   | UnMarkCall Expr
-  | TurnCall LeftOrRight      -- TODO replace with Expr
+  | TurnCall Expr
   | DropCall
   | PickUpCall
   | MoveCall
@@ -48,11 +48,12 @@ data Expr
   | Not Expr
   | Condition Cond SenseDir
   | ConstInt Int
+  | CDir LeftOrRight
   | VarAccess Identifier
   deriving (Eq, Show, Data, Typeable)
 
 -- | Encodes the type of an expression
-data EType = EBool | EInt
+data EType = EBool | EInt | EDir
   deriving (Show, Eq)
 
 class ToTree a where

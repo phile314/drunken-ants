@@ -92,7 +92,9 @@ instance Compilable Statement where
 
   compile MoveCall = unsafeFunCall Move -- TODO before the next Move you should wait 
 
-  compile (TurnCall d) = safeFunCall (Turn d)   -- TODO replace with expr
+  compile (TurnCall e) = do
+    CDir d <- eval EDir e
+    safeFunCall (Turn d)
 
 instance Compilable c => PreCompilable c where  -- Check: Requires Undecidable instances
   precompile c argNames = \args -> do 
@@ -185,8 +187,8 @@ unsafeFunCall f = do
   failure     <- getOnFailure
   generate [f normal failure]
 
--- | Performs the compilation only if the given 'Expr' is a valid 'MarkerNumber', otherwise it throws 
--- a 'CError'
+-- | Performs the compilation only if the given 'Expr' is a valid 'MarkerNumber',
+-- otherwise it throws a 'CError'.
 compileWithMarker :: (MarkerNumber -> Compile CState [Instruction])
                   -> Expr
                   -> Compile CState [Instruction]

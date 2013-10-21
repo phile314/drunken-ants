@@ -23,5 +23,5 @@ simpleProb :: Test
 simpleProb = testCode expected input
   where expected = [Flip 2 1 2, Turn IsLeft 3, Turn IsRight 3, Mark 1 4]
         input = compile $ StmBlock [WithProb 0.5 b1 b2, MarkCall (ConstInt 1)]
-        b1 = StmBlock [TurnCall IsLeft]
-        b2 = StmBlock [TurnCall IsRight]
+        b1 = StmBlock [TurnCall (CDir IsLeft)]
+        b2 = StmBlock [TurnCall (CDir IsRight)]

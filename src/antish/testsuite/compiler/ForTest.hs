@@ -24,7 +24,7 @@ simpleFor = testCode expected input
   where expected = [Turn IsLeft (s+1) | s <- [0..3]]
         input = compile $ For Nothing counter bodyFor
         counter = [ConstInt n | n <- [0..3]]
-        bodyFor = StmBlock [TurnCall IsLeft]
+        bodyFor = StmBlock [TurnCall (CDir IsLeft)]
 
 -- | Tests a for-loop with more instructions in the body
 moreInstructionBody :: Test
@@ -33,4 +33,4 @@ moreInstructionBody = testCode expected input
         bodyAss s = [Turn IsLeft (s+1), Turn IsLeft (s+2)]
         input = compile $ For Nothing counter bodyFor
         counter = [ConstInt n | n <- [1..3]]
-        bodyFor = StmBlock [TurnCall IsLeft, TurnCall IsLeft]
+        bodyFor = StmBlock [TurnCall (CDir IsLeft), TurnCall (CDir IsLeft)]
