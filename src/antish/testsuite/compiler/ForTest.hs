@@ -4,7 +4,7 @@ module ForTest where
 
 import Test.HUnit
 import Ast
-import Compiler.Class
+import Compiler.Core
 import Compiler.Compile
 import Util
 
