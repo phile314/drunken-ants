@@ -10,7 +10,7 @@ data CError = FunNotInScope Identifier -- ^ A function used is not in scope
             | WrongNumberParameters Identifier Int Int -- ^ The number of parameters used is wrong (first number given, second number expected
             | InvalidMarkerNumber Int        -- ^ An invalid marker has been used
             | InvalidProbability Double      -- ^ An invalid probability has been used
-            | WrongType Expr EType           -- ^ An expression has not the correct type
+            | WrongType Expr EType EType     -- ^ An expression has not the correct type
             | AnyError String          -- ^ A generic error
     deriving Eq
 
@@ -23,7 +23,7 @@ instance Show CError where
   show (NotBoolean expr) = "The expression " ++ show expr ++ " is not Boolean"
   show (InvalidMarkerNumber n) = "Invalid Marker: " ++ show n ++ ". Must be one of 0, 1, 2, 3, 4, 5"
   show (InvalidProbability p) = "A probability must be included in (0, 1] (" ++ show p ++ " given)"
-  show (WrongType e t)        = "The expression " ++ show e ++ " has not type " ++ show t
+  show (WrongType e t1 t2) = "The expression " ++ show e ++ " has type " ++ show t1 ++ " (expected " ++ show t2 ++ ")"
   show (WrongNumberParameters iden actual expected) = required ++ given 
     where required = iden ++ " requires " ++ show expected
           given    = " (" ++ show actual ++ " given)"

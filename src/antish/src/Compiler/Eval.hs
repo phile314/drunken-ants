@@ -12,14 +12,30 @@ import Assembly
 -- | @'eval' t e@ evaluates the expression @e@ and checks if it has type @t@.
 -- If the expression contains unscoped variables, or variables of a wrong type a 'CError' is thrown.
 eval :: EType -> Expr -> Compile CState Expr
-eval t (VarAccess iden)      = lookupVar iden >>= eval t
 eval EBool c@(Condition _ _) = return c
 eval EBool (And c1 c2)       = liftM2 And (eval EBool c1) (eval EBool c2)
 eval EBool (Or  c1 c2)       = liftM2 Or  (eval EBool c1) (eval EBool c2)
 eval EBool (Not c)           = liftM Not (eval EBool c)
 eval EInt  c@(ConstInt _)    = return c
-eval EDir  c@(CDir _)          = return c
-eval t e = throwError $ WrongType e t
+eval EDir  c@(CDir _)        = return c
+eval t (VarAccess iden)      = do
+  e <- lookupVar iden
+  t' <- typeOf e
+  if t /= t' then throwError $ WrongType (VarAccess iden) t' t
+    else eval t e            -- TODO use catchError
+
+eval t e = do
+  actual <- typeOf e 
+  throwError $ WrongType e actual t
+
+-- | Returns the type of an arbitrary expression
+typeOf :: Expr -> Compile CState EType
+typeOf (Condition _ _) = return EBool
+typeOf (And _ _      ) = return EBool
+typeOf (Or _ _       ) = return EBool
+typeOf (VarAccess i  ) = lookupVar i >>= typeOf 
+typeOf (CDir _       ) = return EDir
+typeOf (ConstInt _   ) = return EInt
 
 -- | Checks if the 'MarkerNumber' given is valid
 validMarkerNumber :: MarkerNumber -> Bool

@@ -11,7 +11,8 @@ import Util
 
 -- | The tests that will be run
 errorTests :: Test
-errorTests = TestLabel "CError" $ TestList [notInScope, wrongNumberParameters, invalidMarker]
+errorTests = TestLabel "CError" $ TestList tests
+  where tests = [notInScope, wrongNumberParameters, invalidMarker, wrongType, wrongTypeVar]
 
 -- | Tests that the proper CError is returned when a non-scoped function is used
 notInScope :: Test
@@ -40,3 +41,18 @@ invalidProbability = testError expected input
   where invalidProb = 1.1
         expected = InvalidProbability invalidProb
         input = compile $ WithProb invalidProb undefined undefined
+
+-- | Tests that the proper 'CError' is returned when a wrong type is used
+wrongType :: Test
+wrongType = testError expected input
+  where expected = WrongType expr t1 t2
+        (expr, t1, t2) = (ConstInt 1, EInt, EBool)
+        input    = compile $ IfThenElse expr undefined undefined
+
+-- | Tests that the proper 'CError' is returned when a variable of wrong type is used
+wrongTypeVar :: Test
+wrongTypeVar = testError expected input
+  where expected = WrongType var t1 t2
+        (var, t1, t2) = (VarAccess "x", EInt, EBool)
+        input = compile $ varDecl (StmBlock [IfThenElse var undefined undefined])
+        varDecl = Let [VarDecl "x" (ConstInt 1)]
