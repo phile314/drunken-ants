@@ -24,7 +24,7 @@ pExpr :: GenParser Char st Expr
 pExpr = pInt 
 
 pInt :: GenParser Char st Expr
-pInt = ConstInt <$> natural
+pInt = ConstInt . fromIntegral <$> natural
 
 pLet :: GenParser Char st Statement 
 pLet = Let <$> (reserved "let" *> endLineSep pBinding) <*> (reserved "in" *> pStmBlock)
