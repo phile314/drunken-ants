@@ -1,6 +1,6 @@
 -- | Defines the compiling operations for the elements of the Ast
 
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Compiler.Core (
     module Compiler.Class
@@ -10,14 +10,15 @@ module Compiler.Core (
 -- A more efficient implementation of assemblyLenght should be provided, in addition a class for this 
 -- feature should be declared and instance for each compilable element shold be provided
 
+import Ast
+import Assembly (Instruction, AntState) 
 import Compiler.Eval
-import Data.Maybe
 import Compiler.Error
 import Compiler.Class
-import Assembly (Instruction, AntState) 
+import Compiler.Precompile
 import Compiler.Compile
-import Ast
 import Control.Monad.State
+import Data.Maybe
 
 instance Compilable a => Compilable (Maybe a) where
   compile (Just x) = compile x
@@ -83,13 +84,6 @@ instance Compilable Statement where
   compile (TurnCall e) = do
     CDir d <- eval EDir e
     safeFunCall (Turn d)
-
-instance Compilable c => PreCompilable c where  -- Check: Requires Undecidable instances
-  precompile c argNames = \args -> do 
-    insertParameters argNames args
-    i <- compile c
-    removeScope      -- Parameters Scope
-    return i
 
 instance Compilable c => Jumpable [c] where
   compileWithJump []  _    = return []
