@@ -32,9 +32,8 @@ data Statement =
   | DropCall
   | PickUpCall
   | MoveCall
---ph stuff
---  | Label String
---  | JumpTo String
+  | Label String
+  | JumpTo String
   deriving (Eq, Data, Typeable)
 
 data Binding =
@@ -87,8 +86,8 @@ instance ToTree Statement where
   toTree (DropCall)            = Node "DropCall" []
   toTree (TurnCall lr)         = Node ("TurnCall" ++ show lr) []
   toTree (MoveCall)            = Node "MoveCall" []
---  toTree (Label lbl)           = Node ("Label " ++ lbl) []
---  toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
+  toTree (Label lbl)           = Node ("Label " ++ lbl) []
+  toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
 
 instance ToTree Expr where
   toTree (ConstInt i)   = Node ("ConstInt " ++ (show i)) []
