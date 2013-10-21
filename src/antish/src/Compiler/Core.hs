@@ -7,7 +7,6 @@ module Compiler.Core (
   ) where
 
 -- TODO
--- compileWithJump should be generalized to something that can be used also by the Try instance of compile
 -- A more efficient implementation of assemblyLenght should be provided, in addition a class for this 
 -- feature should be declared and instance for each compilable element shold be provided
 
@@ -34,20 +33,9 @@ instance Compilable StmBlock where
   compile (StmBlock xs) = compile xs
 
 instance Compilable Statement where
-  compile (IfThenElse expr b1 b2) = eval EBool expr >>= compileIf
-    where compileIf (And e1 e2) = do
-              [Sense c1 s1 _ sd1] <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
-              if2@((Sense _ s3 s4 _):_) <- compile (IfThenElse e2 b1 b2)
-              return $ (Sense c1 s1 s4 sd1):if2
-          compileIf (Or e1 e2) = do
-              [Sense c1 s0 _ sd1] <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
-              if2@((Sense _ s1 s2 _):_) <- compile (IfThenElse e2 b1 b2)
-              return $ (Sense c1 s1 s0 sd1):if2
-          compileIf (Not e) = do
-            (Sense c s1 s2 sd):xs <- compile (IfThenElse e b1 b2) 
-            return $ (Sense c s2 s1 sd):xs
-          compileIf (Condition c sd) = compileAndReorder ifte b1 b2
-            where ifte s1 s2 = Sense sd s1 s2 c 
+  compile (IfThenElse expr b1 b2) = do
+    expr' <- eval EBool expr
+    compileIf expr' b1 b2
 
   compile (FunCall ident args) = do 
     (expectedArgs , body) <- lookupFun ident
@@ -186,6 +174,29 @@ unsafeFunCall f = do
   normal      <- goNext 
   failure     <- getOnFailure
   generate [f normal failure]
+
+-- | Compiles an arbitrary IfThenElse statement.
+-- The expression involved must be already reduced to basic values.
+compileIf :: Expr       -- ^ A reduced Boolean expression
+          -> StmBlock   -- ^ The "then" branch
+          -> StmBlock   -- ^ The "else" branch
+          -> Compile CState [Instruction]
+compileIf (And e1 e2) b1 b2 = do
+  [Sense c1 s1 _ sd1] <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
+  if2@((Sense _ s3 s4 _):_) <- compileIf e2 b1 b2
+  return $ (Sense c1 s1 s4 sd1):if2
+
+compileIf (Or e1 e2) b1 b2 = do
+  [Sense c1 s0 _ sd1] <- compileIf e1 (StmBlock []) (StmBlock [])
+  if2@((Sense _ s1 s2 _):_) <- compileIf e2 b1 b2
+  return $ (Sense c1 s1 s0 sd1):if2
+
+compileIf (Not e) b1 b2 = do
+  (Sense c s1 s2 sd):xs <- compileIf e b1 b2
+  return $ (Sense c s2 s1 sd):xs
+
+compileIf (Condition c sd) b1 b2 = compileAndReorder ifte b1 b2
+  where ifte s1 s2 = Sense sd s1 s2 c
 
 -- | Performs the compilation only if the given 'Expr' is a valid 'MarkerNumber',
 -- otherwise it throws a 'CError'.
