@@ -117,7 +117,8 @@ evalToInt :: Expr -> Compile CState Int
 evalToInt (ConstInt i)     = return $ fromIntegral i
 evalToInt (VarAccess iden) = lookupVar iden >>= evalToInt
 evalToInt _ = undefined   -- Throw appropriate error
- 
+
+evalToBool :: Expr -> Compile CState Expr
 evalToBool c@(Condition cd sd ) = return c
 evalToBool (Not e) = liftM Not (evalToBool e)
 evalToBool (And e1 e2) = liftM2 And (evalToBool e1) (evalToBool e2)
