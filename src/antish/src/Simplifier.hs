@@ -36,6 +36,7 @@ enlEnv (Env bs cs) bsn = (Env (enlEnv' bs bsn) cs)
 putEnv :: Env -> String -> Expr -> Env
 putEnv (Env bs cs) id ex = (Env (M.insert id (BVar ex) bs) cs)
 
+-- | Updates the environment and the state when entering a function.
 enterFun :: Env -> [String] -> [Expr] -> String -> StateCS (Env, String)
 enterFun (Env bs cs) ps es id = do
   cn <- get
@@ -46,30 +47,34 @@ enterFun (Env bs cs) ps es id = do
   where
     bs' = foldl (\a (p, e) -> M.insert p (BVar e) a) bs $ zip ps es 
 
+-- | Returns the value of the variable with the given name
+--   or throws an error if no such function exists.
 lookupVar :: String -> Env -> Expr
 lookupVar id (Env bs _) = case (bs M.! id) of
   (BVar v) -> v
 
-
+-- | Returns the function with the given name
+--   or throws an error if no such function exists.
 lookupFun :: String -> Env -> FunInfo 
-lookupFun id (Env bs _) = trace (id ++ "--" ++show bs) $ case (bs M.! id) of
+lookupFun id (Env bs _) = case (bs M.! id) of
   (BFun f) -> f
 
 isBuiltin :: String -> Bool
 isBuiltin id = id `elem` ["move", "turn", "drop", "pickUp"]
 
-type PTName = String
-
+-- | A program transformation.
 data ProgTrans = ProgTrans 
-  { name :: PTName,
+  { name :: String,
     transf :: Program -> Program }
 
-
+-- | Produces a simpler version of a program. The result
+--   is semantically equivalent to the original version.
 simplify :: Program -> Program
 simplify =
       (transf propConsts) . (transf inline)
 
 
+-- | Tries to simplify the tree by removing unreachable code.
 propConsts = ProgTrans
   { name = "Propagate Constants"
   , transf =  transformBi sStmBl }
@@ -86,7 +91,9 @@ propConsts = ProgTrans
 
 type StateCS a = State Int a
 
-
+-- | Inlines variables, functions and unrolls loops. The returned tree
+--   is garantued to have no function calls (apart from builtin functions)
+--   and to contain no variables.
 inline = ProgTrans
   { name = "Inline variables, functions and unroll loops"
   , transf = \p -> fst $ runState (descendBiM (sStmBl emptyEnv) p) 0}
@@ -142,6 +149,9 @@ inline = ProgTrans
           f  e             = e
         in transform f
 
+-- | Checks whether the function to be called in the given function call has already
+--   been called before with the same arguments. If so, it returns the label located
+--   before the function code.
 isRec :: Env -> Statement -> StateCS (Maybe String)
 isRec (Env _ cs ) f = isRec' cs f
   where
