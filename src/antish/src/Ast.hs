@@ -13,30 +13,33 @@ import Data.Data
 
 type Identifier = String
 
-data Program = Program Statement
+data Program = Program StmBlock
+  deriving (Eq, Data, Typeable)
+
+data StmBlock = StmBlock [Statement]
   deriving (Eq, Data, Typeable)
 
 data Statement =
     FunCall Identifier [Expr]
-  | IfThenElse Expr Statement Statement
-  | For (Maybe Identifier) [Expr] Statement
-  | Try Statement Statement
-  | Let [Binding] Statement
-  | WithProb Double Statement Statement
+  | IfThenElse Expr StmBlock StmBlock
+  | For (Maybe Identifier) [Expr] StmBlock
+  | Try StmBlock StmBlock
+  | Let [Binding] StmBlock
+  | WithProb Double StmBlock StmBlock
   | MarkCall Expr
   | UnMarkCall Expr
   | TurnCall LeftOrRight      -- TODO replace with Expr
   | DropCall
   | PickUpCall
   | MoveCall
-  | Label String
-  | JumpTo String
-  | StmBlock [Statement]
+--ph stuff
+--  | Label String
+--  | JumpTo String
   deriving (Eq, Data, Typeable)
 
 data Binding =
     VarDecl Identifier Expr
-  | FunDecl Identifier [Identifier] Statement
+  | FunDecl Identifier [Identifier] StmBlock
   deriving (Eq, Data, Typeable)
 
 
@@ -68,6 +71,9 @@ instance ToTree Binding where
   toTree (VarDecl id ex)     = Node "VarDecl" [(Node id []), toTree ex]
   toTree (FunDecl id ids ss) = Node "FunDecl" ((map (\s -> Node s []) (id:ids)) ++ [toTree ss])
 
+instance ToTree StmBlock where
+  toTree (StmBlock stms)       = Node "StmBlock" (map toTree stms)
+
 instance ToTree Statement where
   toTree (FunCall id exs)      = Node ("FunCall " ++ id) (map toTree exs)
   toTree (IfThenElse c s1 s2)  = Node "IfThenElse" [toTree c, toTree s1, toTree s2]
@@ -75,12 +81,11 @@ instance ToTree Statement where
   toTree (Try s1 s2)           = Node "Try" [toTree s1, toTree s2]
   toTree (Let bs ss)           = Node "Let" [toTree bs, toTree ss]
   toTree (WithProb p s1 s2)    = Node "WithProb" [(Node (show p) []), toTree s1, toTree s2]
-  toTree (StmBlock stms)       = Node "StmBlock" (map toTree stms)
   toTree (DropCall)            = Node "DropCall" []
   toTree (TurnCall lr)         = Node ("TurnCall" ++ show lr) []
   toTree (MoveCall)            = Node "MoveCall" []
-  toTree (Label lbl)           = Node ("Label " ++ lbl) []
-  toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
+--  toTree (Label lbl)           = Node ("Label " ++ lbl) []
+--  toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
 
 instance ToTree Expr where
   toTree (ConstInt i)   = Node ("ConstInt " ++ (show i)) []

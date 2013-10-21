@@ -1,5 +1,5 @@
 module Simplify
-  ( simplify, shrinkStm, propConsts, inline, ProgTrans (..), test1, test2 )
+  ( simplify, propConsts, inline, ProgTrans (..), test1, test2 )
 where
 
 import Debug.Trace
@@ -11,7 +11,7 @@ data Env = Env
   { bindings :: M.Map String BindRHS
   , callStack :: [(String, [Expr], String)] }
 
-type FunInfo = ([String], Statement)
+type FunInfo = ([String], StmBlock)
 
 data BindRHS
   = BFun FunInfo
@@ -64,53 +64,52 @@ simplify =
       (transf propConsts) . (transf inline)
 
 
-shrinkStm = ProgTrans
-  { name = "Replace statement blocks with one element by their content."
-  , transf = transformBi sStm }
-  where
-    sStm (StmBlock [s]) = s
-    sStm s              = s
-
 propConsts = ProgTrans
   { name = "Propagate Constants"
-  , transf =  transformBi sStm }
+  , transf =  transformBi sStmBl }
   where
-    sStm (IfThenElse ex s1 s2) =
+    sStmBl (StmBlock ss) = (StmBlock (concat $ map sStm ss))
+    sStm :: Statement -> [Statement]
+    sStm (IfThenElse ex (StmBlock s1) (StmBlock s2)) =
       case (reduce ex) of
         (ConstBool True)  -> s1
         (ConstBool False) -> s2
-        ex'               -> (IfThenElse ex' s1 s2)
-    sStm s = s
+        ex'               -> [IfThenElse ex' (StmBlock s1) (StmBlock s2)]
+    sStm s = [s]
 
 
 inline = ProgTrans
   { name = "Inline variables, functions and unroll loops"
-  , transf = descendBiM (sStm emptyEnv) }
+  , transf = descendBi (sStmBl emptyEnv) }
   where
-    sStm :: Env -> Statement -> Statement
+    sStmBl :: Env -> StmBlock -> StmBlock
+    sStmBl env (StmBlock ss) = (StmBlock (concat $ map (sStm env) ss))
+    sStmBl' env sb = let (StmBlock ss) = sStmBl env sb in ss
+
+    sStm :: Env -> Statement -> [Statement]
     sStm env (Let bs ss)            =
       let env' = enlEnv env bs
-        in (descendBi (sStm env') ss)
+        in sStmBl' env' ss
 
-    sStm env (IfThenElse ex s1 s2)  = (IfThenElse (inline' env ex) (descendBi (sStm env) s1) (descendBi (sStm env) s2))
-    sStm env f@(FunCall id exs)     =
+    sStm env (IfThenElse ex s1 s2)  = [IfThenElse (inline' env ex) (sStmBl env s1) (sStmBl env s2)]
+{-    sStm env f@(FunCall id exs)     =
       if isBuiltin id then
-        (FunCall id (map (inline' env) exs))
+        [FunCall id (map (inline' env) exs)]
       else
         case isRec env f of
-          (Just lbl) -> (JumpTo lbl)
+          (Just lbl) -> [JumpTo lbl]
           _ -> let (params, st) = lookupFun id env
                    exs' = map (inline' env) exs
                    (env', lbl) = enterFun env params exs' id
-                 in StmBlock [ (Label lbl), (descendBi (sStm env') st)]
- 
-    sStm env (For Nothing exs st)   = (StmBlock (map (const $ descendBi (sStm env) st) exs))
+                 in (Label lbl):(sStmBl' env' st)
+-}
+    sStm env (For Nothing exs st)   = (concat $ map (const $ sStmBl' env st) exs)
     sStm env (For (Just id) exs st) =
       let eval = reduce . (inline' env)
-          f e = descendBi (sStm (putEnv env id (eval e))) st
-        in StmBlock (map f exs)
+          f e = sStmBl' (putEnv env id (eval e)) st
+        in concat $ map f exs
 
-    sStm env s                      = descend (sStm env) s
+    sStm env s                      = [descendBi (sStmBl env) s]
     inline' :: Env -> Expr -> Expr
     inline' env = 
       let f (VarAccess id) = lookupVar id env
@@ -156,5 +155,5 @@ reduce (Or e1 e2) =
 reduce ex = ex
 
 
-test1 = Program (Let [VarDecl "x" (ConstBool True)] (IfThenElse (And (ConstBool True) (VarAccess "x")) (DropCall) (MoveCall)))
-test2 = Program (For (Just "x") [(ConstBool True), (ConstBool False)] (IfThenElse (And (ConstBool True) (VarAccess "x")) (DropCall) (MoveCall)))
+test1 = Program $ StmBlock [(Let [VarDecl "x" (ConstBool True)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])]))]
+test2 = Program $ StmBlock [(For (Just "x") [(ConstBool True), (ConstBool False)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])]))]

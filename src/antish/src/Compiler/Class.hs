@@ -31,7 +31,9 @@ instance Compilable a => Compilable [a] where
 instance Compilable Program where
   compile (Program smb) = compile smb
 
-
+instance Compilable StmBlock where
+  compile (StmBlock xs) = compile xs 
+  
 instance Compilable Statement where
   compile (IfThenElse expr b1 b2) = evalToBool expr >>= compileIf
     where compileIf (And e1 e2)      = undefined
@@ -76,8 +78,6 @@ instance Compilable Statement where
     i2 <- compileWithJump b2 succ
     return $ i1 ++ i2
 
-  compile (StmBlock xs) = compile xs
-
   compile (MarkCall e) = do
       n <- evalToInt e 
       if validMarkerNumber n then safeFunCall (Mark n)
@@ -105,7 +105,7 @@ instance Compilable Statement where
 class PreCompilable c where
   precompile :: c -> [Identifier] -> ([Expr] -> Compile CState [Instruction])
 
-instance PreCompilable Statement where
+instance PreCompilable StmBlock where
   precompile b argNames = \args -> do 
     insertParameters argNames args
     i <- compile b
@@ -154,7 +154,7 @@ instance Jumpable c => Jumpable (Maybe c) where
   compileWithJump (Just c) j = compileWithJump c j
   compileWithJump Nothing  _ = return []
 
-instance Jumpable Statement where
+instance Jumpable StmBlock where
   compileWithJump (StmBlock xs) = compileWithJump xs
 
 -------------------------------------------------------------------------------

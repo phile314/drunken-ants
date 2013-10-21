@@ -7,7 +7,7 @@ import Parser.LangDef
 import Parser.Boolean
 import Text.Parsec.Combinator
 
-pStmBlock :: GenParser Char st Statement
+pStmBlock :: GenParser Char st StmBlock
 pStmBlock = StmBlock <$> (moreStatements <|> oneStatement)
   where moreStatements = braces $ pStatement `sepBy1` semi 
         oneStatement   = count 1 pStatement
