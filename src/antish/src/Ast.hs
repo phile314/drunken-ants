@@ -29,6 +29,8 @@ data Statement =
   | DropCall
   | PickUpCall
   | MoveCall
+  | Label String
+  | JumpTo String
   | StmBlock [Statement]
   deriving (Eq, Data, Typeable)
 
@@ -77,6 +79,8 @@ instance ToTree Statement where
   toTree (DropCall)            = Node "DropCall" []
   toTree (TurnCall lr)         = Node ("TurnCall" ++ show lr) []
   toTree (MoveCall)            = Node "MoveCall" []
+  toTree (Label lbl)           = Node ("Label " ++ lbl) []
+  toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
 
 instance ToTree Expr where
   toTree (ConstInt i)   = Node ("ConstInt " ++ (show i)) []
