@@ -10,10 +10,12 @@ import ErrorTest
 import ForTest
 import TryTest
 import ProbTest
+import ScopeTest
 
 -- | The tests that will be run
 tests :: Test
-tests = TestLabel "Compiler" $ TestList [errorTests, ifThenElseTests, forTests, tryTests, withProbTests]
+tests = TestLabel "Compiler" $ TestList tests
+  where tests = [errorTests, ifThenElseTests, forTests, tryTests, withProbTests, scopeTests]
 
 -- | The entry point of the test suite
 main :: IO ()
