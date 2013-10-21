@@ -15,6 +15,7 @@ import Compiler.Compile
 import Ast
 import Control.Monad.State
 import Compiler.Error
+import Compiler.Eval
 import Data.Maybe
 
 class Compilable c where
@@ -33,7 +34,7 @@ instance Compilable Program where
 
 
 instance Compilable Statement where
-  compile (IfThenElse expr b1 b2) = evalToBool expr >>= compileIf
+  compile (IfThenElse expr b1 b2) = eval EBool expr >>= compileIf
     where compileIf (And e1 e2)      = undefined
           compileIf (Or  e1 e2)      = undefined
           compileIf (Not e1)         = undefined
@@ -79,13 +80,14 @@ instance Compilable Statement where
   compile (StmBlock xs) = compile xs
 
   compile (MarkCall e) = do
-      n <- evalToInt e 
-      if validMarkerNumber n then safeFunCall (Mark n)
+      ConstInt n <- eval EInt e
+      if validMarkerNumber n 
+        then safeFunCall (Mark n)
         else throwError $ InvalidMarkerNumber n
 
 
   compile (UnMarkCall e) = do
-     n <- evalToInt e
+     ConstInt n <- eval EInt e
      if validMarkerNumber n 
         then safeFunCall (Unmark n)
         else throwError $ InvalidMarkerNumber n
@@ -96,7 +98,7 @@ instance Compilable Statement where
 
   compile MoveCall = unsafeFunCall Move -- TODO before the next Move you should wait 
 
-  compile (TurnCall d) = safeFunCall (Turn d)
+  compile (TurnCall d) = safeFunCall (Turn d)   -- TODO replace with expr
 -------------------------------------------------------------------------------
 -- Precombilable Definition
 

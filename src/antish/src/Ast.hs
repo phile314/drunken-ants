@@ -37,16 +37,19 @@ data Binding =
   | FunDecl Identifier [Identifier] Statement
   deriving (Eq, Data, Typeable)
 
-
 data Expr
   = ConstBool Bool
   | And Expr Expr
   | Or  Expr Expr
   | Not Expr
   | Condition Cond SenseDir
-  | ConstInt Integer
+  | ConstInt Int
   | VarAccess Identifier
   deriving (Eq, Show, Data, Typeable)
+
+-- | Encodes the type of an expression
+data EType = EBool | EInt
+  deriving (Show, Eq)
 
 class ToTree a where
   toTree :: a -> Tree String
