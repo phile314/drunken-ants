@@ -9,7 +9,7 @@ import Data.Generics.Uniplate.Data
 
 data Env = Env
   { bindings :: M.Map String BindRHS
-  , callStack :: [String] }
+  , callStack :: [String]}
 
 type FunInfo = ([String], Statement)
 
@@ -34,8 +34,11 @@ enlEnv (Env bs cs) bsn = (Env (enlEnv' bs bsn) cs)
 putEnv :: Env -> String -> Expr -> Env
 putEnv (Env bs cs) id ex = (Env (M.insert id (BVar ex) bs) cs)
 
-putCS :: Env -> String -> Env
-putCS (Env bs cs) c = (Env bs (c:cs))
+enterFun :: Env -> [String] -> [Expr] -> String -> Env
+enterFun (Env bs cs) ps es id = (Env bs' cs')
+  where
+    bs' = foldl (\a (p, e) -> M.insert p (BVar e) a) bs $ zip ps es 
+    cs' = id:cs
 
 lookupVar :: String -> Env -> Expr
 lookupVar id (Env bs _) = case (bs M.! id) of
@@ -98,9 +101,9 @@ inline = ProgTrans
         (FunCall id (map (inline' env) exs))
       else
         let (params, st) = lookupFun id env
-            env' = foldl (\a (i, ex) -> putEnv a i (inline' env ex)) env (zip params exs)
-            env'' = putCS env' id
-          in (descendBi (sStm env'') st)
+            exs' = map (inline' env) exs
+            env' = enterFun env params exs' id
+          in (descendBi (sStm env') st)
  
     sStm env (For Nothing exs st)   = (StmBlock (map (const $ descendBi (sStm env) st) exs))
     sStm env (For (Just id) exs st) =
@@ -129,11 +132,21 @@ reduce (And e1 e2) =
         (ConstBool True)  -> e1'
         e2'               -> (And e1' e2')
 
-
 reduce (Not e) =
   case (reduce e) of
     (ConstBool b) -> (ConstBool (not b))
     e             -> (Not e)
+
+reduce (Or e1 e2) =
+  case (reduce e1) of
+    (ConstBool True)  -> (ConstBool True)
+    (ConstBool False) -> reduce e2
+    e1'               ->
+      case reduce e2 of
+        (ConstBool True)  -> (ConstBool True)
+        (ConstBool False) -> e1'
+        e2'               -> (And e1' e2')
+    
 
 reduce ex = ex
 

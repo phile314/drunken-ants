@@ -7,15 +7,12 @@ module Assembly (
   , MarkerNumber
   , LeftOrRight (..)
   , AntState
-  , AssemblyFrag
   ) where
 
 import Data.Data
 
 -- FIX copy and paste:  it would be nice to import this directly from the Simulator mode 
 type AntState = Int 
-
-type AssemblyFrag = [Instruction]
 
 data Instruction 
    = Sense SenseDir AntState AntState Cond

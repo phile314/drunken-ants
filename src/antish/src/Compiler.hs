@@ -6,5 +6,5 @@ import Ast
 import Assembly
 
 -- | Returns the assembly instructions representing the given program in low-level ant code.
-compile :: Program -> AssemblyFrag
+compile :: Program -> [Instruction]
 compile = undefined
