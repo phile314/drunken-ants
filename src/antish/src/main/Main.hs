@@ -4,7 +4,7 @@ import Parser
 import System.Environment
 import Ast
 import Options.Applicative
-
+import Control.Monad.Error
 
 data Options = Options
   { showAST :: Bool
@@ -17,21 +17,20 @@ options = Options
   <*> argument str ( metavar "SRC" )
 
 
-run :: Options -> IO ()
+run :: Options -> Loader Program
 run opts = do
-  ast <- parseFile (srcFile opts)
-
-  case ast of
-    (Right t) -> print (UseTree t)
-    (Left er) -> print er
-
+  Program imports top <- parseFile (srcFile opts)
+  res <- loadImports imports
+  return $ Program imports (res ++ top)
 
 main :: IO ()
-main = execParser opts >>= run
+main = do
+  options <- execParser opts 
+  res <- runErrorT (run options)
+  case res of
+    Right r -> print r
+    Left e -> print e
   where
     opts = info (helper <*> options)
       ( fullDesc <> progDesc "Compiles High-level Ant Code to Low-level Ant Code.")
-
-  
- 
 

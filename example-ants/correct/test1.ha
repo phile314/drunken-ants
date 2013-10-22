@@ -1,12 +1,14 @@
-f x =
+f x = {
   try move with
     move
   catch
     turn left
+}
 
-main = f 10
-  if enemy ahead then
+main = {
+  f 10;
+  if (Foe Ahead) then
      move
   else
      turn right
-
+}

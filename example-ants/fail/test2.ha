@@ -1,12 +1,13 @@
-let turnBack = 
+turnBack = {
   for [1..3] turn   -- [from..to] is not accepted by the lexer
+}
 
-let goHome =
+goHome = {
   move
   if !(Home Here) then goHome
-   
+}
 
-let findFood = {
+findFood = {
   move 
   try pickUp with {
     turnBack

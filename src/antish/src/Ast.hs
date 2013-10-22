@@ -13,11 +13,13 @@ import Data.Data
 
 type Identifier = String
 
-data Program = Program [Binding]
+type Import = String
+
+data Program = Program [Import] [Binding]
   deriving (Eq, Data, Typeable)
 
 data StmBlock = StmBlock [Statement]
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Data, Typeable, Show)
 
 data Statement =
     FunCall Identifier [Expr]
@@ -34,12 +36,12 @@ data Statement =
   | MoveCall
   | Label String
   | JumpTo String
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Data, Typeable, Show)
 
 data Binding =
     VarDecl Identifier Expr
   | FunDecl Identifier [Identifier] StmBlock
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Data, Typeable, Show)
 
 data Expr
   = ConstBool Bool
@@ -60,7 +62,8 @@ class ToTree a where
   toTree :: a -> Tree String
 
 instance ToTree Program where
-  toTree (Program tl) = Node "Program" [toTree tl]
+  toTree (Program im tl) = Node "Program" [toTree' im, toTree tl]
+    where toTree' xs = Node "Import" $ map (\s -> Node s []) xs
 
 instance ToTree a => ToTree (Maybe a) where
   toTree Nothing   = Node "Nothing" []
