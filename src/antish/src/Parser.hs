@@ -34,9 +34,9 @@ type Loader = ErrorT ParseError IO
 instance Error ParseError where
   strMsg = undefined
 
-loadImports :: [String] -- Names of the modules
+loadImports :: [String] -- Names of the modules (without extension)
             -> Loader [Binding]
 loadImports moduleNames = do
-  ps <- forM moduleNames parseFile 
-  res <- forM ps (\(Program i t) -> loadImports i)
+  ps <- forM moduleNames (\name -> parseFile (name ++ ".ha"))
+  res <- forM ps (\(Program i t) -> liftM (t ++) (loadImports i)) -- TODO check again position of t
   return $ concat res
