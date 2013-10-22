@@ -8,5 +8,8 @@ import Ast
 import Parser.Block
 
 pProgram :: GenParser Char st Program
-pProgram = Program <$> pStmBlock
+pProgram = Program <$> pTop
 
+-- | Parses top level declarations (no let)
+pTop :: GenParser Char st [Binding]
+pTop = many pBinding

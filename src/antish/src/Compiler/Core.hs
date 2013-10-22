@@ -28,7 +28,7 @@ instance Compilable a => Compilable [a] where
   compile xs = getJumpTo >>= compileWithJump xs
  
 instance Compilable Program where
-  compile (Program smb) = compile smb
+  compile (Program tl) = compile $ Let tl (StmBlock [])
 
 instance Compilable StmBlock where
   compile (StmBlock xs) = compile xs

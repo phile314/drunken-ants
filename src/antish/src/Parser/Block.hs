@@ -4,7 +4,7 @@ import Control.Applicative hiding ((<|>), many)
 import Text.Parsec.Prim
 import Ast
 import Parser.LangDef
-import Parser.Boolean
+import Parser.Expr
 import Text.Parsec.Combinator
 
 pStmBlock :: GenParser Char st StmBlock
@@ -20,12 +20,6 @@ pIfThenElse = IfThenElse <$> (reserved "if" *> pBoolExpr) <*>
                              (reserved "then" *> pStmBlock) <*> 
                              ((reserved "else" *> pStmBlock) <|> (pure (StmBlock [])))
 
-pExpr :: GenParser Char st Expr
-pExpr = pInt 
-
-pInt :: GenParser Char st Expr
-pInt = ConstInt . fromIntegral <$> natural
-
 pLet :: GenParser Char st Statement 
 pLet = Let <$> (reserved "let" *> endLineSep pBinding) <*> (reserved "in" *> pStmBlock)
   where endLineSep = flip sepBy1 comma
@@ -39,9 +33,6 @@ pFunDecl = FunDecl <$> identifier <*> many identifier <*> (reserved "=" *> pStmB
 pVarDecl :: GenParser Char st Binding
 pVarDecl = VarDecl <$> identifier <*> (reserved "=" *> pExpr) 
 
--- Additional checks: 
--- * does the function exists?
--- * it is called with the correct number of parameters?
 pFunCall :: GenParser Char st Statement
 pFunCall = FunCall <$> identifier <*> many pExpr
 
@@ -53,7 +44,6 @@ pFor = For <$> (reserved "for" *> optionMaybe iterVar) <*> list <*> pStmBlock
 pTry :: GenParser Char st Statement
 pTry = Try <$> (reserved "try" *> pStmBlock)  <*> 
                (reserved "catch" *> pStmBlock)
-
 
 {- -- Working parser with improved syntax, in the AS the binding has for this to be changed
 

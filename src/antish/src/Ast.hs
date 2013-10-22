@@ -13,7 +13,7 @@ import Data.Data
 
 type Identifier = String
 
-data Program = Program StmBlock
+data Program = Program [Binding]
   deriving (Eq, Data, Typeable)
 
 data StmBlock = StmBlock [Statement]
@@ -60,8 +60,7 @@ class ToTree a where
   toTree :: a -> Tree String
 
 instance ToTree Program where
-  toTree (Program ss) = Node "Program" [toTree ss]
-
+  toTree (Program tl) = Node "Program" [toTree tl]
 
 instance ToTree a => ToTree (Maybe a) where
   toTree Nothing   = Node "Nothing" []
