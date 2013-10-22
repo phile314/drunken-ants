@@ -13,7 +13,9 @@ import Data.Data
 
 type Identifier = String
 
-data Program = Program StmBlock
+type Import = String
+
+data Program = Program [Import] [Binding]
   deriving (Eq, Data, Typeable)
 
 data StmBlock = StmBlock [Statement]
@@ -60,8 +62,8 @@ class ToTree a where
   toTree :: a -> Tree String
 
 instance ToTree Program where
-  toTree (Program ss) = Node "Program" [toTree ss]
-
+  toTree (Program im tl) = Node "Program" [toTree' im, toTree tl]
+    where toTree' xs = Node "Import" $ map (\s -> Node s []) xs
 
 instance ToTree a => ToTree (Maybe a) where
   toTree Nothing   = Node "Nothing" []

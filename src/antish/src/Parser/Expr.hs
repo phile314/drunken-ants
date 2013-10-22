@@ -1,6 +1,6 @@
--- | This module provides parsers for boolean expressions
+-- | This module provides parsers for expressions
 
-module  Parser.Boolean where
+module  Parser.Expr where
 
 import Ast ( Expr (..), Cond (..), SenseDir(..))
 import Control.Applicative
@@ -10,6 +10,18 @@ import Parser.LangDef
 import Text.Parsec.Prim hiding ((<|>))
 import Text.Parsec.Expr
 import Text.Read hiding (parens, choice)
+
+pExpr :: GenParser Char st Expr
+pExpr = pInt <|> pBoolExpr <|> pVar   -- TODO missing CDir
+
+pInt :: GenParser Char st Expr
+pInt = ConstInt . fromIntegral <$> natural
+
+pVar :: GenParser Char st Expr
+pVar = VarAccess <$> identifier
+
+-------------------------------------------------------------------------------
+-- Boolean Expression
 
 -- | Parses a (parenthesized) boolean expression
 pBoolExpr :: GenParser Char st Expr
@@ -23,7 +35,7 @@ bOperators = [ [ Prefix (reservedOp "!" >> return Not) ]
 
 -- | Parses a simple condition made by 'Cond' 'Sensedir'
 bTerm :: GenParser Char st Expr
-bTerm = Condition <$> pCond <*> pSenseDir <|> parens pBoolExpr
+bTerm = Condition <$> pCond <*> pSenseDir <|> pVar <|> parens pBoolExpr
 
 -- | Parses a 'SenseDir' constant
 pSenseDir :: GenParser Char st SenseDir
@@ -42,4 +54,3 @@ pMarker = Marker <$> (reserved "Marker" *> natural)
 -- of a showable type.
 makeConstParser :: (Show a) => a -> GenParser Char st a
 makeConstParser x = reserved (show x) *> return x 
-

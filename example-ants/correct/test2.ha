@@ -1,6 +1,6 @@
-turnBack = {for [1,2,3] turn}
+turnBack = for [1,2,3] turn 
 
-goHome = { move }
+goHome = move
 
 findFood = {
   move;

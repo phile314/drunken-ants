@@ -6,7 +6,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Test
 import Test.QuickCheck.Property 
 import System.Exit
-import Parser.Boolean
+import Parser.Expr
 import Text.Parsec
 import BoolCombinators
 import Ast

@@ -1,6 +1,6 @@
-let f1 = { for [1,2,3] turn },
-    f2 = f1,
-    f3 = {
+f1 = { for [1,2,3] turn }
+f2 = f1
+f3 = {
      move;
      try {
        pickUp;
@@ -8,14 +8,11 @@ let f1 = { for [1,2,3] turn },
         goHome;
         drop;
        f2
-     }
-     catch
-       f3 },
-    f4 x = {
+    } catch f3 }
+f4 x = {
       if (x) then
         f4 !x
       else
-        f3
-    }
-  in
-    f3
+        f3 }
+
+main = f3

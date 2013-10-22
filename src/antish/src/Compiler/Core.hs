@@ -27,8 +27,9 @@ instance Compilable a => Compilable (Maybe a) where
 instance Compilable a => Compilable [a] where
   compile xs = getJumpTo >>= compileWithJump xs
  
+-- The imported bindings are supposed to be already included in the top level declarations
 instance Compilable Program where
-  compile (Program smb) = compile smb
+  compile (Program _ tl) = compile $ Let tl (StmBlock [])
 
 instance Compilable StmBlock where
   compile (StmBlock xs) = compile xs

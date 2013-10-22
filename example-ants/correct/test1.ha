@@ -7,7 +7,7 @@ f x = {
 
 main = {
   f 10;
-  if (Enemy Ahead) then
+  if (Foe Ahead) then
      move
   else
      turn right
