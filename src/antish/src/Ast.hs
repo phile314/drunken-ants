@@ -17,7 +17,7 @@ data Program = Program StmBlock
   deriving (Eq, Data, Typeable)
 
 data StmBlock = StmBlock [Statement]
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Data, Typeable, Show)
 
 data Statement =
     FunCall Identifier [Expr]
@@ -34,12 +34,12 @@ data Statement =
   | MoveCall
   | Label String
   | JumpTo String
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Data, Typeable, Show)
 
 data Binding =
     VarDecl Identifier Expr
   | FunDecl Identifier [Identifier] StmBlock
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Data, Typeable, Show)
 
 data Expr
   = ConstBool Bool

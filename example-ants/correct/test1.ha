@@ -1,12 +1,14 @@
-let f x =
+f x = {
   try move with
     move
   catch
     turn left
+}
 
-f 10
-if enemy ahead then
-  move
-else
-  turn right
-
+main = {
+  f 10;
+  if (Enemy Ahead) then
+     move
+  else
+     turn right
+}
