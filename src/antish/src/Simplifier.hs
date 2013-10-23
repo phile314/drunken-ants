@@ -105,52 +105,56 @@ type StateCS a = State Int a
 --   and to contain no variables.
 inline = ProgTrans
   { name = "Inline variables, functions and unroll loops"
-  , transf = \p -> (return . fst $ runState (descendBiM (sStmBl emptyEnv) p) 0) :: Identity Program}
+  , transf = \p -> (return . fst $ runState (descendBiM (sStmBl True emptyEnv) p) 0) :: Identity Program}
   where
-    sStmBl :: Env -> StmBlock -> StateCS StmBlock
-    sStmBl env (StmBlock ss) = do
-      ss' <- mapM (sStm env) ss
-      return (StmBlock $ concat ss')
+    sStmBl :: Bool -> Env -> StmBlock -> StateCS StmBlock
+    sStmBl _ _ (StmBlock []) = return (StmBlock [])
+    sStmBl mt env (StmBlock ss) = do
+      ss' <- mapM (sStm False env) (take ((length ss) - 1) ss)
+      se' <- sStm mt env (head $ drop ((length ss) - 1) ss)
+      return (StmBlock $ (concat ss') ++ se')
 
-    sStmBl' env sb = do
-      (StmBlock ss) <- sStmBl env sb
+    sStmBl' mt env sb = do
+      (StmBlock ss) <- sStmBl mt env sb
       return ss
 
-    sStm :: Env -> Statement -> StateCS [Statement]
-    sStm env (Let bs ss)            =
+    sStm :: Bool -> Env -> Statement -> StateCS [Statement]
+    sStm mt env (Let bs ss)            =
       let env' = enlEnv env bs
-        in sStmBl' env' ss
+        in sStmBl' mt env' ss
 
-    sStm env (IfThenElse ex s1 s2)  = do
-      s1' <- sStmBl env s1
-      s2' <- sStmBl env s2
+    sStm mt env (IfThenElse ex s1 s2)  = do
+      s1' <- sStmBl mt env s1
+      s2' <- sStmBl mt env s2
       return [IfThenElse (inline' env ex) s1' s2']
 
-    sStm env f@(FunCall id exs)     =
+    sStm mt env f@(FunCall id exs)     =
       if isBuiltin id then
         return [FunCall id (map (inline' env) exs)]
       else do
         l <- isRec env f
-        case l of
-          (Just lbl) -> return [JumpTo lbl]
+        case (l, mt) of
+          ((Just lbl), True) -> return [JumpTo lbl]
           _ -> do
                  let (params, st) = lookupFun id env
                  let exs' = map (inline' env) exs
                  (env', lbl) <- enterFun env params exs' id
-                 s' <- sStmBl' env' st
+                 s' <- sStmBl' mt env' st
                  return $ (Label lbl):s'
 
-    sStm env (For Nothing exs st)   = do
-      st' <- mapM (const $ sStmBl' env st) exs
+    sStm mt env (For Nothing exs st)   = do
+      -- TODO not good enough
+      st' <- mapM (const $ sStmBl' False env st) exs
       return $ concat st'
-    sStm env (For (Just id) exs st) =
+    sStm mt env (For (Just id) exs st) =
+      -- TODO
       let eval = reduce . (inline' env)
-          f e = sStmBl' (putEnv env id (eval e)) st
+          f e = sStmBl' False (putEnv env id (eval e)) st
         in mapM f exs >>= (return . concat)
 
 
-    sStm env s                      = do
-      r <- descendBiM (sStmBl env) s
+    sStm mt env s                      = do
+      r <- descendBiM (sStmBl mt env) s
       return [r]
 
     inline' :: Env -> Expr -> Expr
