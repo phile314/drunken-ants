@@ -8,10 +8,13 @@ import qualified Data.Map as M
 import Data.Generics.Uniplate.Data
 
 import Control.Monad.State
+import Control.Monad.Identity
+import Parser
 
 data Env = Env
   { bindings :: M.Map String BindRHS
-  , callStack :: [(String, [Expr], String)] }
+    --             func-name, params, def-lbl
+  , callStack :: [(String, [Expr], String)]}
 
 type FunInfo = ([String], StmBlock)
 
@@ -24,7 +27,7 @@ instance Show BindRHS where
   show (BVar e)        = "BVar " ++ show e
   
 
-emptyEnv = Env { bindings = M.empty, callStack = [] }
+emptyEnv = Env { bindings = M.empty, callStack = []}
 
 enlEnv :: Env -> [Binding] -> Env
 enlEnv (Env bs cs) bsn = (Env (enlEnv' bs bsn) cs)
@@ -35,6 +38,7 @@ enlEnv (Env bs cs) bsn = (Env (enlEnv' bs bsn) cs)
 
 putEnv :: Env -> String -> Expr -> Env
 putEnv (Env bs cs) id ex = (Env (M.insert id (BVar ex) bs) cs)
+
 
 -- | Updates the environment and the state when entering a function.
 enterFun :: Env -> [String] -> [Expr] -> String -> StateCS (Env, String)
@@ -63,21 +67,26 @@ isBuiltin :: String -> Bool
 isBuiltin id = id `elem` ["move", "turn", "drop", "pickUp"]
 
 -- | A program transformation.
-data ProgTrans = ProgTrans 
+data ProgTrans m = ProgTrans 
   { name :: String,
-    transf :: Program -> Program }
+    transf :: Program -> m Program }
 
 -- | Produces a simpler version of a program. The result
 --   is semantically equivalent to the original version.
 simplify :: Program -> Program
-simplify =
-      (transf propConsts) . (transf inline)
+simplify p =
+      runIdentity $ ((transf propConsts) p) >>= (transf $ inline)
+
+
+-- | Resolves imports.
+resImports :: Program -> Loader Program
+resImports = undefined
 
 
 -- | Tries to simplify the tree by removing unreachable code.
 propConsts = ProgTrans
   { name = "Propagate Constants"
-  , transf =  transformBi sStmBl }
+  , transf = (return . transformBi sStmBl) :: Program -> Identity Program }
   where
     sStmBl (StmBlock ss) = (StmBlock (concat $ map sStm ss))
     sStm :: Statement -> [Statement]
@@ -96,7 +105,7 @@ type StateCS a = State Int a
 --   and to contain no variables.
 inline = ProgTrans
   { name = "Inline variables, functions and unroll loops"
-  , transf = \p -> fst $ runState (descendBiM (sStmBl emptyEnv) p) 0}
+  , transf = \p -> (return . fst $ runState (descendBiM (sStmBl emptyEnv) p) 0) :: Identity Program}
   where
     sStmBl :: Env -> StmBlock -> StateCS StmBlock
     sStmBl env (StmBlock ss) = do
@@ -139,6 +148,7 @@ inline = ProgTrans
           f e = sStmBl' (putEnv env id (eval e)) st
         in mapM f exs >>= (return . concat)
 
+
     sStm env s                      = do
       r <- descendBiM (sStmBl env) s
       return [r]
@@ -153,7 +163,7 @@ inline = ProgTrans
 --   been called before with the same arguments. If so, it returns the label located
 --   before the function code.
 isRec :: Env -> Statement -> StateCS (Maybe String)
-isRec (Env _ cs ) f = isRec' cs f
+isRec env f = isRec' (callStack env) f
   where
     isRec' ((id2, exs2, lbl):cs) (FunCall id exs) | id2 == id && exs2 == exs = return $ Just lbl
     isRec' (_:cs) f = isRec' cs f
@@ -175,6 +185,7 @@ reduce (And e1 e2) =
 reduce (Not e) =
   case (reduce e) of
     (ConstBool b) -> (ConstBool (not b))
+    (Not e2)      -> e2
     e             -> (Not e)
 
 reduce (Or e1 e2) =
@@ -191,5 +202,5 @@ reduce (Or e1 e2) =
 reduce ex = ex
 
 
-test1 = Program $ StmBlock [(Let [VarDecl "x" (ConstBool True)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])]))]
-test2 = Program $ StmBlock [(For (Just "x") [(ConstBool True), (ConstBool False)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])]))]
+test1 = Program [] $ [VarDecl "x" (ConstBool True), FunDecl "main" [] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])])]
+test2 = Program [] $ [FunDecl "main" [] (StmBlock [For (Just "x") [(ConstBool True), (ConstBool False)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])])])]
