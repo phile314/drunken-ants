@@ -12,20 +12,11 @@ import Simplify.Reduce
 import Simplify.Types
 import Parser
 
-
+-- | Converts VarAccess nodes to Const... Nodes if possible, for example True and False.
 mkLiterals = ProgTrans
-  { name = "TODO"
+  { name = "Converts VarAccess nodes to Const... Nodes if possible, for example True and False."
   , transf = (return . transformBi sExpr) :: Program -> Identity Program }
   where
---    sStmBl (StmBlock ss) = (StmBlock (concat $ map sStm ss))
-{-    sStm :: Statement -> [Statement]
-    sStm (IfThenElse ex (StmBlock s1) (StmBlock s2)) =
-      case (reduce ex) of
-        (ConstBool True)  -> s1
-        (ConstBool False) -> s2
-        ex'               -> [IfThenElse ex' (StmBlock s1) (StmBlock s2)]
-    sStm s = [s]
--}
     sExpr (VarAccess "True") = ConstBool True
     sExpr (VarAccess "False") = ConstBool False
     sExpr e = e

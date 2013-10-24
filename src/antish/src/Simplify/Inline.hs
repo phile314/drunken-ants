@@ -3,7 +3,7 @@
 {-# LANGUAGE DoAndIfThenElse #-}
 
 module Simplify.Inline
-  ( inline, progToLet )
+  ( inline, progToLet, maxDepth )
 where
 
 
@@ -20,6 +20,7 @@ import Control.Monad.State
 import Control.Monad.Identity
 import Parser
 
+-- | The maximal allowed recursion depth. This only applies to recursive calls which are not tail-calls.
 maxDepth = 20
 
 type Bindings = M.Map String BindRHS
@@ -83,12 +84,15 @@ lookupSym' env id = (bindings env) M.! id
 isBuiltin :: String -> Bool
 isBuiltin id = id `elem` ["Move", "Turn", "Drop", "PickUp"]
 
-
-progToLet (Program is bs) = (Program is [FunDecl "__main" [] (StmBlock [(Let bs (StmBlock [FunCall "main" []]))])])
+-- | Wraps all bindings in a Let. This conversion makes sure that there is only the
+--   internal __main__ binding on top, which allows us to skip the top level
+--   bindings when building the environment.
+progToLet (Program is bs) = (Program is [FunDecl "__main__" [] (StmBlock [(Let bs (StmBlock [FunCall "main" []]))])])
 
 -- | Inlines variables, functions and unrolls loops. The returned tree
 --   is garantued to have no function calls (apart from builtin functions)
---   and to contain no variables.
+--   and to contain no variables. Tail-calls are converted to iterative
+--   code, non tail-call recursion is limited to a depth of `maxDepth`.
 inline = ProgTrans
   { name = "Inline variables, functions and unroll loops."
   , transf = transf' }
@@ -104,9 +108,8 @@ inline = ProgTrans
     sStmBl :: Bool -> Env -> StmBlock -> Inline StmBlock
     sStmBl _ _ (StmBlock []) = return (StmBlock [])
     sStmBl mt env (StmBlock ss) = do
-      ss' <- mapM (sStm False env) (take ((length ss) - 1) ss)
-      se' <- sStm mt env (head $ drop ((length ss) - 1) ss)
-      return (StmBlock $ (concat ss') ++ se')
+      ss' <- mapM2 (sStm False env) (sStm mt env) ss
+      return (StmBlock $ concat ss')
 
     sStmBl' :: Bool -> Env -> StmBlock -> Inline [Statement]
     sStmBl' mt env sb = do
@@ -136,19 +139,26 @@ inline = ProgTrans
                  return $ (Label lbl):s'
 
     sStm mt env (For Nothing exs st)   = do
-      -- TODO not good enough
-      st' <- mapM (const $ sStmBl' False env st) exs
+      st' <- mapM2 (const $ sStmBl' False env st) (const $ sStmBl' mt env st) exs
       return $ concat st'
     sStm mt env (For (Just id) exs st) =
-      -- TODO
       let eval = reduce . (inlineV' env)
-          f e = sStmBl' False (putEnv env id (eval e)) st
-        in mapM f exs >>= (return . concat)
+          f m e = sStmBl' m (putEnv env id (eval e)) st
+        in mapM2 (f False) (f mt) exs >>= (return . concat)
 
 
     sStm mt env s                      = do
       r <- descendBiM (sStmBl mt env) s
       return [r]
+
+mapM2 f1 f2 (l1:(ls@(_:_))) = do
+                            s <- f1 l1
+                            ss <- mapM2 f1 f2 ls
+                            return (s:ss)
+mapM2 f1 f2 [l]        = do
+                            s <- f2 l
+                            return [s]
+mapM2 _ _ []           = return []
 
 
 -- | Checks whether the function to be called in the given function call has already

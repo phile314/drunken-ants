@@ -15,7 +15,7 @@ import Parser
 
 -- | Tries to simplify the tree by removing unreachable code.
 propConsts = ProgTrans
-  { name = "Propagate Constants"
+  { name = "Propagate Constants and remove unreachable code."
   , transf = (return . transformBi sStmBl) :: Program -> Identity Program }
   where
     sStmBl (StmBlock ss) = (StmBlock (concat $ map sStm ss))
