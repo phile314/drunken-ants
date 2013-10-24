@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DoAndIfThenElse #-}
 
 module Simplify.Inline
   ( inline, progToLet )
