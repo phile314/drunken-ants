@@ -1,5 +1,3 @@
--- Non tail-recursive program. This is impossible to compile
--- to the low level ant language.
 
 main = {
     f
@@ -7,8 +5,8 @@ main = {
 
 f = {
     if Foe Ahead then {
-        Move
-        f
+        Move;
+        f;
         Turn Left
     }
 }

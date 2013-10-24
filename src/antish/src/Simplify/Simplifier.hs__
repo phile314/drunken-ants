@@ -16,15 +16,14 @@ data Env = Env
     --             func-name, params, def-lbl
   , callStack :: [(String, [Expr], String)]}
 
-type FunInfo = ([String], StmBlock)
 
 data BindRHS
-  = BFun FunInfo
-  | BVar Expr
+  = BFun FunInfo StmBlock Env
+  | BVar Expr Env
 
 instance Show BindRHS where
-  show (BFun (ps, st)) = "BFun " ++ show ps
-  show (BVar e)        = "BVar " ++ show e
+  show (BFun ps st env) = "BFun " ++ show ps
+  show (BVar e env)        = "BVar " ++ show e
   
 
 emptyEnv = Env { bindings = M.empty, callStack = []}
