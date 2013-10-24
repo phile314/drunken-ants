@@ -39,6 +39,8 @@ instance Compilable Statement where
     expr' <- eval EBool expr
     compileIf expr' b1 b2
 
+  compile (FunCall "Move" []) = unsafeFunCall Move -- TODO before the next Move you should wait 
+
   compile (FunCall ident args) = do 
     (expectedArgs , body) <- lookupFun ident
     let nArgs = length args
@@ -80,11 +82,15 @@ instance Compilable Statement where
 
   compile PickUpCall = unsafeFunCall PickUp
 
-  compile MoveCall = unsafeFunCall Move -- TODO before the next Move you should wait 
 
   compile (TurnCall e) = do
     CDir d <- eval EDir e
     safeFunCall (Turn d)
+
+  compile (Label lbl) = nextState >>= addLabel lbl >> return []
+  compile (JumpTo lbl) = do
+    sTo <- lookupLabel lbl
+    return [(Flip 1 sTo sTo)]
 
 instance Compilable c => Jumpable [c] where
   compileWithJump []  _    = return []

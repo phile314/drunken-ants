@@ -21,6 +21,8 @@ module Compiler.Compile (
     , unsetOnFailure
     , runCompile
     , goNext
+    , addLabel
+    , lookupLabel
   ) where
 
 import Control.Monad.State
@@ -30,6 +32,7 @@ import Compiler.Error
 import Compiler.Scope as Scope
 import Ast
 import Assembly (Instruction, AntState)
+import qualified Data.Map as M
 
 type Compile s a = CompileT s Identity a
 
@@ -45,6 +48,7 @@ data CState = CState {   currentState :: AntState -- ^ The first available state
                        , variables :: Scope Identifier VarDef -- ^ The variables scope environment
                        , jumpTo    :: (AntState -> AntState)  -- ^ Returns where to jump after the current instruction have been executed if it succeds
                        , onFailure :: [AntState]        -- ^ Where to jump on failure
+                       , labels    :: M.Map String AntState
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
@@ -55,7 +59,7 @@ type VarDef = Expr
 
 -- | The empty CState
 empty :: CState
-empty = CState 0 Scope.empty Scope.empty (+1) [0]
+empty = CState 0 Scope.empty Scope.empty (+1) [0] M.empty
 
 -------------------------------------------------------------------------------
 -- Utility functions
@@ -175,3 +179,9 @@ setOnFailure as = modify $ \s -> s {onFailure = as:(onFailure s)}
 -- | Unsets the local defined 'AntState' used for jumping on failures.
 unsetOnFailure :: Compile CState ()
 unsetOnFailure = modify $ \s -> s { onFailure = tail (onFailure s) }
+
+addLabel :: String -> AntState -> Compile CState ()
+addLabel lbl as = modify $ \s -> s { labels = M.insert lbl as (labels s) }
+
+lookupLabel :: String -> Compile CState AntState
+lookupLabel lbl = gets ((M.! lbl) . labels)

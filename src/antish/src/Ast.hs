@@ -34,6 +34,7 @@ data Statement =
   | DropCall
   | PickUpCall
   | MoveCall
+  -- only jumps to the same or a higher level of the AST are supported, jumps down into the children of a node are not.
   | Label String
   | JumpTo String
   deriving (Eq, Data, Typeable, Show)
