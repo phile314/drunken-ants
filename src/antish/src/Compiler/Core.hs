@@ -40,11 +40,12 @@ instance Compilable Statement where
     compileIf expr' b1 b2
 
   compile (FunCall ident args) = do 
-    (expectedArgs , body) <- lookupFun ident
+    (rec, expectedArgs , body) <- lookupFun ident
     let nArgs = length args
-    if nArgs /= expectedArgs
-      then throwError $ WrongNumberParameters ident nArgs expectedArgs
-      else body args
+        wrongNum = throwError $ WrongNumberParameters ident nArgs expectedArgs
+    if nArgs /= expectedArgs 
+      then wrongNum
+      else compileFunCall rec ident body args
  
   compile (Let bs b) = do
     newScope >> mapM_ insertBinding bs 
@@ -151,8 +152,15 @@ assemblyLength b = do
 -- | Inserts a binding in the proper environment
 insertBinding :: Binding -> Compile CState ()
 insertBinding (VarDecl iden expr) = addVarDecl iden expr
-insertBinding (FunDecl iden args b) = addFunDecl iden (length args) c
+insertBinding (FunDecl NonRec iden args b) = addFunDecl iden (length args) NonRec c
   where c = precompile b args
+insertBinding (FunDecl Rec iden [] b) = do
+  let c = precompileRecFun iden b
+  tailRecursive <- isTailRecursive b
+  if tailRecursive 
+    then addFunDecl iden 0 Rec c
+    else throwError $ NotTailRecursive iden b
+insertBinding (FunDecl Rec iden xs _) = throwError $ InvalidRecFun iden xs
 
 -- | Compiles a safe function call (i.e. it cannot fail). 
 safeFunCall :: (AntState -> Instruction) -> Compile CState [Instruction]
@@ -202,3 +210,31 @@ compileWithMarker f e = do
      ConstInt n <- eval EInt e
      if validMarkerNumber n then f n
         else throwError $ InvalidMarkerNumber n
+
+compileFunCall Rec iden body args = do
+  s <- getRecursiveCall iden
+  case s of 
+    Just s0 -> generate $ [Flip 1 s0 s0]    -- Jump back to starting point
+    Nothing -> body args
+compileFunCall NonRec _ body args = body args
+
+-- | Checks if the given function is tail recursive, i.e. eventually calls a recursive function.
+isTailRecursive :: StmBlock    -- ^ The body of the recursive function
+                -> Compile CState Bool
+isTailRecursive (StmBlock []) = return False
+isTailRecursive (StmBlock xs) = isTailRecursive' (last xs)
+
+-- | Checks if the given statement represents a tail recursive call.
+isTailRecursive' (FunCall f _) = lookupFun f >>= isRecursive
+  where isRecursive (r,_,_) = return $ r == Rec
+isTailRecursive' (IfThenElse _ b1 b2) = bothTailRecursive b1 b2
+isTailRecursive' (Try          b1 b2) = bothTailRecursive b1 b2
+isTailRecursive' (WithProb   _ b1 b2) = bothTailRecursive b1 b2
+isTailRecursive' (Let _   b) = isTailRecursive b
+isTailRecursive' (For _ _ b) = isTailRecursive b
+isTailRecursive' _ = return False
+
+bothTailRecursive b1 b2 = do
+  t1 <- isTailRecursive b1
+  t2 <- isTailRecursive b2
+  return $ t1 && t2

@@ -25,7 +25,7 @@ notInScope = testError expected input
 wrongNumberParameters :: Test
 wrongNumberParameters = testError expected input
   where expected = WrongNumberParameters foo pActual pExpected
-        input = (addFunDecl foo pExpected (\_ -> return [])) >> (compile $ FunCall foo [undefined])
+        input = (addFunDecl foo pExpected NonRec (\_ -> return [])) >> (compile $ FunCall foo [undefined])
         (foo, pExpected, pActual) = ("foo", 2, 1)
 
 -- | Tests that the proper CError is returned when an invalid marker is used.

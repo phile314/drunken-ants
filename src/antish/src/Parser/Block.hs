@@ -6,6 +6,7 @@ import Ast
 import Parser.LangDef
 import Parser.Expr
 import Text.Parsec.Combinator
+import Data.Maybe
 
 pStmBlock :: GenParser Char st StmBlock
 pStmBlock = StmBlock <$> (moreStatements <|> oneStatement)
@@ -28,7 +29,8 @@ pBinding :: GenParser Char st Binding
 pBinding = try pVarDecl <|> pFunDecl
 
 pFunDecl :: GenParser Char st Binding
-pFunDecl = FunDecl <$> identifier <*> many identifier <*> (reserved "=" *> pStmBlock)
+pFunDecl = FunDecl <$> rec <*> identifier <*> many identifier <*> (reserved "=" *> pStmBlock)
+  where rec = maybe NonRec (const Rec) <$> optionMaybe (reserved "rec")
 
 pVarDecl :: GenParser Char st Binding
 pVarDecl = VarDecl <$> identifier <*> (reserved "=" *> pExpr) 
