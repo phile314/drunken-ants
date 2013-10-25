@@ -2,7 +2,9 @@
 
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
 
-module Compiler.Precompile where
+module Compiler.Precompile (
+    module Compiler.Class
+  , precompileRecFun ) where
 
 import Compiler.Class
 import Compiler.Compile
