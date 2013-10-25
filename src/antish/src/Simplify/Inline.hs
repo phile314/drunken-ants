@@ -51,7 +51,7 @@ enlEnv (Env bs cs cd) bsn =
       bsa = (bs' `M.union` bs)
       f :: [Binding] -> Bindings -> Bindings
       f ((VarDecl id ex):bs)    bs' = M.insert id (BVar ex bsa) $ f bs bs'
-      f ((FunDecl id ps st):bs) bs' = M.insert id (BFun ps st bsa) $ f bs bs'
+      f ((FunDecl _ id ps st):bs) bs' = M.insert id (BFun ps st bsa) $ f bs bs'
       f []                      bs' = M.empty
     in (Env bs' cs cd)
 
@@ -87,7 +87,7 @@ isBuiltin id = id `elem` ["Move", "Turn", "Drop", "PickUp"]
 -- | Wraps all bindings in a Let. This conversion makes sure that there is only the
 --   internal __main__ binding on top, which allows us to skip the top level
 --   bindings when building the environment.
-progToLet (Program is bs) = (Program is [FunDecl "__main__" [] (StmBlock [(Let bs (StmBlock [FunCall "main" []]))])])
+progToLet (Program is bs) = (Program is [FunDecl Rec "__main__" [] (StmBlock [(Let bs (StmBlock [FunCall "main" []]))])])
 
 -- | Inlines variables, functions and unrolls loops. The returned tree
 --   is garantued to have no function calls (apart from builtin functions)

@@ -41,9 +41,12 @@ data Statement =
 
 data Binding =
     VarDecl Identifier Expr
-  | FunDecl Identifier [Identifier] StmBlock
+  | FunDecl Recursive Identifier [Identifier] StmBlock
   deriving (Eq, Data, Typeable, Show)
 
+data Recursive = Rec | NonRec
+  deriving (Eq, Data, Typeable, Show)
+    
 data Expr
   = ConstBool Bool
   | And Expr Expr
@@ -75,7 +78,8 @@ instance ToTree a => ToTree [a] where
 
 instance ToTree Binding where
   toTree (VarDecl id ex)     = Node "VarDecl" [(Node id []), toTree ex]
-  toTree (FunDecl id ids ss) = Node "FunDecl" ((map (\s -> Node s []) (id:ids)) ++ [toTree ss])
+  toTree (FunDecl rec id ids ss) = Node ("FunDecl" ++ show rec) forest
+    where forest = ((map (\s -> Node s []) (id:ids)) ++ [toTree ss])
 
 instance ToTree StmBlock where
   toTree (StmBlock stms)       = Node "StmBlock" (map toTree stms)

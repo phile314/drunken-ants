@@ -38,5 +38,5 @@ loadImports :: [String] -- Names of the modules (without extension)
             -> Loader [Binding]
 loadImports moduleNames = do
   ps <- forM moduleNames (\name -> parseFile (name ++ ".ha"))
-  res <- forM ps (\(Program i t) -> liftM (t ++) (loadImports i)) -- TODO check again position of t
+  res <- forM ps (\(Program i t) -> liftM (++ t) (loadImports i))
   return $ concat res

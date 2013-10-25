@@ -21,11 +21,14 @@ module Compiler.Compile (
     , unsetOnFailure
     , runCompile
     , goNext
+    , setRecursiveCall
+    , unsetRecursiveCall
+    , getRecursiveCall
     , addLabel
     , lookupLabel
   ) where
 
-import Control.Monad.State
+import Control.Monad.State hiding (gets)
 import Control.Monad.Identity
 import Compiler.CompileT
 import Compiler.Error
@@ -40,6 +43,9 @@ type Compile s a = CompileT s Identity a
 runCompile :: Compile s a -> s -> Either CError (a ,s)
 runCompile c s = runIdentity $ runCompileT c s
 
+gets :: (s -> a) -> Compile s a
+gets f = get >>= return . f
+
 -------------------------------------------------------------------------------
 -- CState definition
 -- | The state used in the Compile monad
@@ -48,18 +54,19 @@ data CState = CState {   currentState :: AntState -- ^ The first available state
                        , variables :: Scope Identifier VarDef -- ^ The variables scope environment
                        , jumpTo    :: (AntState -> AntState)  -- ^ Returns where to jump after the current instruction have been executed if it succeds
                        , onFailure :: [AntState]        -- ^ Where to jump on failure
+                       , recursive :: M.Map Identifier AntState   -- ^ Tracks the tail recursive 
                        , labels    :: M.Map String AntState
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
 -- is a function that given the exact number of parameters of the correct type returns the assembly code
 -- for the function.
-type FunDef = (Int, [Expr] -> Compile CState [Instruction])
+type FunDef = (Recursive, Int, [Expr] -> Compile CState [Instruction])
 type VarDef = Expr
 
 -- | The empty CState
 empty :: CState
-empty = CState 0 Scope.empty Scope.empty (+1) [0] M.empty
+empty = CState 0 Scope.empty Scope.empty (+1) [0] M.empty M.empty
 
 -------------------------------------------------------------------------------
 -- Utility functions
@@ -75,15 +82,15 @@ generate xs = do
 
 -- | Returns the current variable environment
 varEnv :: Compile CState (Scope Identifier VarDef)
-varEnv = do
-  s <- get
-  return $ variables s
+varEnv = gets variables
 
 -- | Returns the current function environment
 funEnv :: Compile CState (Scope Identifier FunDef)
-funEnv = do
-  s <- get
-  return $ functions s
+funEnv = gets functions
+
+-- | Returns the recursive environment (recursive calls' antstates)
+recEnv :: Compile CState (M.Map Identifier AntState)
+recEnv = gets recursive
 
 -- | Stores in the current scope a variable declaration
 addVarDecl ::    Identifier -- ^ The name of the variable declared
@@ -96,11 +103,12 @@ addVarDecl iden expr = do
 -- | Stores in the current scope a function declaration
 addFunDecl ::    Identifier -- ^ The name of the function declared
               -> Int        -- ^ The number of parameters
+              -> Recursive  -- ^ Is the function recursive
               -> ([Expr] -> Compile CState [Instruction]) -- The precompiled code of the function
               -> Compile CState ()
-addFunDecl iden n c = do
+addFunDecl iden n rec c = do
   env <- funEnv
-  modify $ \s -> s { functions = Scope.insert iden (n, c) env}
+  modify $ \s -> s { functions = Scope.insert iden (rec, n, c) env}
 
 -- | Creates a scope in the correct position where the parameters of a function should be looked up
 insertParameters :: [Identifier] -> [Expr] -> Compile CState ()
@@ -144,7 +152,7 @@ removeScope = do
 
 -- | Returns the first available 'AntState'
 nextState :: Compile CState AntState
-nextState = get >>= (return . currentState)
+nextState = gets currentState
 
 -- | Returns the first available 'AntState' and updates the current 'AntState' with a new available state
 consumeNextState :: Compile CState AntState
@@ -179,6 +187,29 @@ setOnFailure as = modify $ \s -> s {onFailure = as:(onFailure s)}
 -- | Unsets the local defined 'AntState' used for jumping on failures.
 unsetOnFailure :: Compile CState ()
 unsetOnFailure = modify $ \s -> s { onFailure = tail (onFailure s) }
+
+-- | @'setRecursiveCall' iden@ tracks that the tail recursive function @iden@ has already been once, at 
+-- the current state.
+setRecursiveCall :: Identifier -> Compile CState ()
+setRecursiveCall iden = do 
+  cs <- nextState
+  rec <- recEnv
+  modify $ \s -> s { recursive = M.insert iden cs rec } -- Possible old value is overwritten
+
+-- | The program is now outside the recursive function.
+-- The next call (if any) will reset the recursive call.
+unsetRecursiveCall :: Identifier -> Compile CState ()
+unsetRecursiveCall iden = do
+  rec <- recEnv
+  modify $ \s -> s { recursive = M.delete iden rec }
+
+-- | Returns a @'Maybe' 'AntState'@ containing the 'AntState' if the recursive 
+-- function has already been called, 'Nothing' otherwise.
+getRecursiveCall :: Identifier -> Compile CState (Maybe AntState)
+getRecursiveCall iden = do 
+  rec <- recEnv
+  return $ M.lookup iden rec
+
 
 addLabel :: String -> AntState -> Compile CState ()
 addLabel lbl as = modify $ \s -> s { labels = M.insert lbl as (labels s) }

@@ -29,5 +29,5 @@ simplify p = do
 
 
 
-test1 = Program [] $ [VarDecl "x" (ConstBool True), FunDecl "main" [] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])])]
-test2 = Program [] $ [FunDecl "main" [] (StmBlock [For (Just "x") [(ConstBool True), (ConstBool False)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])])])]
+test1 = Program [] $ [VarDecl "x" (ConstBool True), FunDecl Rec "main" [] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])])]
+test2 = Program [] $ [FunDecl Rec "main" [] (StmBlock [For (Just "x") [(ConstBool True), (ConstBool False)] (StmBlock [IfThenElse (And (ConstBool True) (VarAccess "x")) (StmBlock [DropCall]) (StmBlock [MoveCall])])])]

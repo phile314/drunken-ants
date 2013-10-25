@@ -55,7 +55,7 @@ moreDecls = testCode expected input
 simpleFun = testCode expected input
   where expected = [Turn IsRight 1]
         input    = compile $ Let [funDecl] (StmBlock [FunCall "f" [CDir IsRight]])
-        funDecl  = FunDecl "f" ["x"] (StmBlock [TurnCall (VarAccess "x")])
+        funDecl  = FunDecl NonRec "f" ["x"] (StmBlock [TurnCall (VarAccess "x")])
 
 -- | Tests function call inside a function
 -- 
@@ -70,4 +70,4 @@ nestedFun = testCode expected input
         gBody    = StmBlock [FunCall "g" [VarAccess "x"]]
         b1       = StmBlock [funDecl "g" gBody b2]
         b2       = StmBlock [FunCall "f" [CDir IsRight]]
-        funDecl i b = Let [FunDecl i ["x"] b]
+        funDecl i b = Let [FunDecl NonRec i ["x"] b]
