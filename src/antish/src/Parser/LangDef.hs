@@ -21,6 +21,7 @@ lexer = P.makeTokenParser antish
 reserved = P.reserved lexer
 reservedOp = P.reservedOp lexer
 natural = P.natural lexer
+float = P.float lexer
 parens = P.parens lexer
 symbol = P.symbol lexer
 identifier = P.identifier lexer
