@@ -59,7 +59,7 @@ data CState = CState {   currentState :: AntState -- ^ The first available state
                        , variables :: Scope Identifier VarDef -- ^ The variables scope environment
                        , jumpTo    :: (AntState -> AntState)  -- ^ Returns where to jump after the current instruction have been executed if it succeds
                        , onFailure :: [AntState]        -- ^ Where to jump on failure
-                       , recursive :: M.Map Identifier AntState   -- ^ Tracks the tail recursive 
+                       , recursive :: M.Map Identifier AntState   -- ^ Tracks the tail recursive calls
                        , labels    :: M.Map String AntState
                      } 
 

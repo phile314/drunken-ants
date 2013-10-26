@@ -43,10 +43,7 @@ instance Compilable Statement where
         recCall       = catchFunNotInScope args in
     catchError simpleFunCall recCall
 
-  compile (Let bs b) = do
-    newScope >> mapM_ insertBinding bs 
-    i <- compile b
-    removeScope >> return i 
+  compile (Let bs b) = insertBindings bs b
 
   compile (For iden xs b) = do
     let pb x = (precompile b $ maybeToList iden) [x]

@@ -5,7 +5,7 @@
 module Compiler.Utility (
     compileAndReorder
   , assemblyLength
-  , insertBinding
+  , insertBindings
   ) where
 
 import Ast
@@ -14,7 +14,7 @@ import Compiler.Precompile
 import Compiler.Error
 import Compiler.TailRecursion
 import Control.Monad.State
-
+import Data.Maybe (mapMaybe)
 
 -- | @compileAndReorder inst b1 b2@ compiles a piece of assembly code so that 
 --  ______
@@ -59,16 +59,36 @@ assemblyLength b = do
     Right (i,_) -> return $ length i
     Left e      -> throwError e
 
+-- | Insert each bindining in the scope, taking care of handling mutual recursive declaration
+insertBindings :: 
+  Compilable StmBlock => [Binding]  -- ^ The bindings being added
+                      -> StmBlock   -- ^ The block in which these bindingns are defined
+                      -> Compile CState [Instruction]
+insertBindings bs b = do
+  let recs = mapMaybe isRecursive bs
+  newScope >> mapM_ (insertBinding recs) bs
+  i <- compile b
+  removeScope >> return i 
+    where isRecursive (FunDecl Rec iden _ _) = Just iden
+          isRecursive _                      = Nothing
+
+
 -- | Inserts a binding in the proper environment
-insertBinding :: (Compilable StmBlock) => Binding -> Compile CState ()
-insertBinding (VarDecl iden expr) = addVarDecl iden expr
+insertBinding ::
+ (Compilable StmBlock) => [Identifier]  -- ^ Recursive definition
+                       -> Binding       -- ^ The binding being inserted
+                       -> Compile CState ()
+insertBinding _ (VarDecl iden expr) = 
+  addVarDecl iden expr
 
-insertBinding (FunDecl NonRec iden args b) = addFunDecl iden (length args) NonRec c
-  where c = precompile b args
+insertBinding _ (FunDecl NonRec iden args b) = 
+  addFunDecl iden (length args) NonRec c
+    where c = precompile b args
 
-insertBinding (FunDecl Rec iden [] b) = do
+insertBinding recs (FunDecl Rec iden [] b) = do
   let c = precompileRecFun iden b
+  checkTailRecursive iden b recs
   addFunDecl iden 0 Rec c
-  checkTailRecursive iden b    -- can be checked ONLY after adding it
 
-insertBinding (FunDecl Rec iden xs _) = throwError $ InvalidRecFun iden xs
+insertBinding _ (FunDecl Rec iden xs _) = 
+  throwError $ InvalidRecFun iden xs
