@@ -44,7 +44,7 @@ compileFunCall iden args (NonRec, nargs, body) = checkArgs iden nargs args >> bo
 checkArgs :: Identifier -> Int -> [Expr] -> Compile CState ()
 checkArgs iden nargs args = do
   let given = length args
-      wrongNum = WrongNumberParameters iden given nargs
+      wrongNum = WrongNumParam iden given nargs
   if nargs /= given
     then throwError wrongNum 
     else return ()

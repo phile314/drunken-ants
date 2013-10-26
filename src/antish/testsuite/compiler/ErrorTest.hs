@@ -8,11 +8,14 @@ import Compiler.Core
 import Compiler.Compile
 import Compiler.Error
 import Util
+import RecursiveTest
 
 -- | The tests that will be run
 errorTests :: Test
 errorTests = TestLabel "CError" $ TestList tests
-  where tests = [notInScope, wrongNumberParameters, invalidMarker, wrongType, wrongTypeVar]
+  where tests = [notInScope, wrongNumberParameters, 
+                 invalidMarker, wrongType, wrongTypeVar, 
+                 notTailRec, invalidRecDecl]
 
 -- | Tests that the proper CError is returned when a non-scoped function is used
 notInScope :: Test
@@ -24,7 +27,7 @@ notInScope = testError expected input
 -- | Tests that the proper CError is returned when the wrong number of parameters is used
 wrongNumberParameters :: Test
 wrongNumberParameters = testError expected input
-  where expected = WrongNumberParameters foo pActual pExpected
+  where expected = WrongNumParam foo pActual pExpected
         input = (addFunDecl foo pExpected NonRec (\_ -> return [])) >> (compile $ FunCall foo [undefined])
         (foo, pExpected, pActual) = ("foo", 2, 1)
 
@@ -56,3 +59,29 @@ wrongTypeVar = testError expected input
         (var, t1, t2) = (VarAccess "x", EInt, EBool)
         input = compile $ varDecl (StmBlock [IfThenElse var undefined undefined])
         varDecl = Let [VarDecl "x" (ConstInt 1)]
+
+-- | Runs the 'nonTailRecursive' test for each statement of the Ast.
+notTailRec :: Test
+notTailRec = TestLabel "TailRec" $ TestList [notTailRecursive st | st <- statements]
+  where s = StmBlock [DropCall]
+        statements = [IfThenElse (Condition Foe Ahead) s s, Try s s,
+                      For Nothing [] s, Let [] s, 
+                      WithProb 1 s s]
+                      
+-- | Tests that 'NonTailRecursive' error is raised when compiling
+-- a non tail recursive function.
+notTailRecursive :: Statement -> Test
+notTailRecursive s = testError expected input
+  where expected = NotTailRecursive "f" body
+        body     = StmBlock [s]
+        input    = compile $ Let [f] (StmBlock [recCall "f"])
+        f        = FunDecl Rec "f" [] (StmBlock [s])
+
+-- | Tests that 'InvalidRecFun' is raised when a function with non-zero
+-- arguments is declared.
+invalidRecDecl :: Test
+invalidRecDecl = testError expected input
+  where expected = InvalidRecFun "f" args
+        args     = ["x1", "x2"]
+        input    = compile $ Let [f] undefined
+        f        = FunDecl Rec "f" args undefined
