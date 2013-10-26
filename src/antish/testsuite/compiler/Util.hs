@@ -18,7 +18,5 @@ testCode :: [Instruction]                  -- ^ Expected assembly code
          -> Compile CState [Instruction]   -- ^ Will be run and compared with the expected assembly code
          -> Test
 testCode expected input = expected ~=? actual                             
-  where actual = either (error "Compilation should succeed") fst result         
+  where actual = either (\s -> error $ "Failed with:" ++ show s) fst result
         result = runCompile input empty
-
-

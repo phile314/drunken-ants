@@ -8,9 +8,10 @@ module Compiler.Utility (
   , assemblyLength
   , compileIf
   , compileWithMarker
-  , compileFunCall
   , compileAndReorder
-  , isTailRecursive
+  , compileRecFunCall
+  , compileFunCall
+  , checkTailRecursive
   ) where
 
 import Ast
@@ -19,6 +20,7 @@ import Compiler.Precompile
 import Compiler.Error
 import Compiler.Eval
 import Control.Monad.State
+import Data.Maybe (isJust)
 
 -- | Compiles a safe function call (i.e. it cannot fail). 
 safeFunCall :: (AntState -> Instruction) -> Compile CState [Instruction]
@@ -69,17 +71,40 @@ compileWithMarker :: (MarkerNumber -> Compile CState [Instruction])
                   -> Expr
                   -> Compile CState [Instruction]
 compileWithMarker f e = do
-     ConstInt n <- eval EInt e
-     if validMarkerNumber n then f n
-        else throwError $ InvalidMarkerNumber n
+  ConstInt n <- eval EInt e
+  if validMarkerNumber n 
+      then f n
+      else throwError $ InvalidMarkerNumber n
+
+compileRecFunCall :: Identifier -> [Expr] -> CError -> Compile CState [Instruction]
+compileRecFunCall iden' args (FunNotInScope iden) | iden' == iden = do
+  checkArgs iden 0 args
+  s <- getRecursiveCall iden
+  case s of 
+   Just s0 -> generate $ [Flip 1 s0 s0]    -- Jump back to starting point
+   Nothing -> throwError (FunNotInScope iden)
+compileRecFunCall _ _ e = throwError e
 
 
-compileFunCall Rec iden body args = do
+compileFunCall :: Identifier
+               -> [Expr]
+               -> (Recursive, Int, [Expr] -> Compile CState [Instruction])
+               -> Compile CState [Instruction]
+compileFunCall iden args (Rec, nargs, body) = do
+  checkArgs iden nargs args
   s <- getRecursiveCall iden
   case s of 
     Just s0 -> generate $ [Flip 1 s0 s0]    -- Jump back to starting point
     Nothing -> body args
-compileFunCall NonRec _ body args = body args
+compileFunCall iden args (NonRec, nargs, body) = checkArgs iden nargs args >> body args
+
+checkArgs :: Identifier -> Int -> [Expr] -> Compile CState ()
+checkArgs iden nargs args = do
+  let given = length args
+      wrongNum = WrongNumberParameters iden given nargs
+  if nargs /= given
+    then throwError wrongNum 
+    else return ()
 
 
 -- | @compileAndReorder inst b1 b2@ compiles a piece of assembly code so that 
@@ -122,6 +147,12 @@ assemblyLength b = do
     Right (i,_) -> return $ length i
     Left e      -> throwError e
 
+checkTailRecursive :: Identifier -> StmBlock -> Compile CState ()
+checkTailRecursive iden b = do
+  tailRecursive <- isTailRecursive b
+  if tailRecursive 
+    then return ()
+    else throwError $ NotTailRecursive iden b
 
 -- | Checks if the given function is tail recursive, i.e. eventually calls a recursive function.
 isTailRecursive :: StmBlock    -- ^ The body of the recursive function
@@ -131,8 +162,10 @@ isTailRecursive (StmBlock xs) = isTailRecursive' (last xs)
 
 
 -- | Checks if the given statement represents a tail recursive call.
-isTailRecursive' (FunCall f _) = lookupFun f >>= isRecursive
-  where isRecursive (r,_,_) = return $ r == Rec
+isTailRecursive' (FunCall f _) = 
+  catchError (lookupFun f >>= isRecursive) recCall
+  where recCall (FunNotInScope f) = getRecursiveCall f >>= return . isJust
+        isRecursive (r,_,_) = return $ r == Rec
 isTailRecursive' (IfThenElse _ b1 b2) = bothTailRecursive b1 b2
 isTailRecursive' (Try          b1 b2) = bothTailRecursive b1 b2
 isTailRecursive' (WithProb   _ b1 b2) = bothTailRecursive b1 b2

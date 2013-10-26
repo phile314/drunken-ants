@@ -3,6 +3,7 @@ module Compiler.Compile (
       Compile 
     , module Compiler.CompileT
     , Compiler.Compile.empty
+    , catchError
     , generate
     , CState
     , lookupFun
@@ -25,12 +26,11 @@ module Compiler.Compile (
     , unsetRecursiveCall
     , getRecursiveCall
     , addLabel
-    , lookupLabel
-  ) where
+    , lookupLabel) where
 
 import Control.Monad.State hiding (gets)
 import Control.Monad.Identity
-import Compiler.CompileT
+import Compiler.CompileT hiding (catchError)
 import Compiler.Error
 import Compiler.Scope as Scope
 import Ast
@@ -45,6 +45,11 @@ runCompile c s = runIdentity $ runCompileT c s
 
 gets :: (s -> a) -> Compile s a
 gets f = get >>= return . f
+
+catchError :: Compile s a -> (CError -> Compile s a) -> Compile s a
+catchError m handler = do
+  s <- get 
+  either handler (return . fst) (runCompile m s) -- TODO do we really need to run the monad ?
 
 -------------------------------------------------------------------------------
 -- CState definition

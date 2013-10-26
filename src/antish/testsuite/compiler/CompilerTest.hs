@@ -11,11 +11,12 @@ import ForTest
 import TryTest
 import ProbTest
 import ScopeTest
+import RecursiveTest
 
 -- | The tests that will be run
 tests :: Test
 tests = TestLabel "Compiler" $ TestList tests
-  where tests = [errorTests, ifThenElseTests, forTests, tryTests, withProbTests, scopeTests]
+  where tests = [errorTests, ifThenElseTests, forTests, tryTests, withProbTests, scopeTests, recTests]
 
 -- | The entry point of the test suite
 main :: IO ()

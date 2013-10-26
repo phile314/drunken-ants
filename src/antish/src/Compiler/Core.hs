@@ -40,14 +40,11 @@ instance Compilable Statement where
     expr' <- eval EBool expr
     compileIf expr' b1 b2
 
-  compile (FunCall ident args) = do 
-    (rec, expectedArgs , body) <- lookupFun ident
-    let nArgs = length args
-        wrongNum = throwError $ WrongNumberParameters ident nArgs expectedArgs
-    if nArgs /= expectedArgs 
-      then wrongNum
-      else compileFunCall rec ident body args
- 
+  compile (FunCall iden args) =
+    let simpleFunCall = lookupFun iden >>= compileFunCall iden args
+        recCall       = compileRecFunCall iden args in
+    catchError simpleFunCall recCall
+
   compile (Let bs b) = do
     newScope >> mapM_ insertBinding bs 
     i <- compile b
@@ -91,7 +88,7 @@ instance Compilable Statement where
   compile (Label lbl) = nextState >>= addLabel lbl >> return []
   compile (JumpTo lbl) = do
     sTo <- lookupLabel lbl
-    return [(Flip 1 sTo sTo)]
+    return [(Flip 1 sTo sTo)]   -- TODO should be generate
 
 instance Compilable c => Jumpable [c] where
   compileWithJump []  _    = return []
@@ -120,8 +117,7 @@ insertBinding (FunDecl NonRec iden args b) = addFunDecl iden (length args) NonRe
   where c = precompile b args
 insertBinding (FunDecl Rec iden [] b) = do
   let c = precompileRecFun iden b
-  tailRecursive <- isTailRecursive b
-  if tailRecursive 
-    then addFunDecl iden 0 Rec c
-    else throwError $ NotTailRecursive iden b
+  addFunDecl iden 0 Rec c
+  checkTailRecursive iden b    -- can be checked ONLY after adding it
+
 insertBinding (FunDecl Rec iden xs _) = throwError $ InvalidRecFun iden xs
