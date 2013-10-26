@@ -9,9 +9,8 @@ module Compiler.Utility (
   , compileIf
   , compileWithMarker
   , compileAndReorder
-  , compileRecFunCall
+  , catchFunNotInScope
   , compileFunCall
-  , checkTailRecursive
   ) where
 
 import Ast
@@ -20,7 +19,6 @@ import Compiler.Precompile
 import Compiler.Error
 import Compiler.Eval
 import Control.Monad.State
-import Data.Maybe (isJust)
 
 -- | Compiles a safe function call (i.e. it cannot fail). 
 safeFunCall :: (AntState -> Instruction) -> Compile CState [Instruction]
@@ -76,19 +74,28 @@ compileWithMarker f e = do
       then f n
       else throwError $ InvalidMarkerNumber n
 
-compileRecFunCall :: Identifier -> [Expr] -> CError -> Compile CState [Instruction]
-compileRecFunCall iden' args (FunNotInScope iden) | iden' == iden = do
-  checkArgs iden 0 args
+-- | Handler for FunNotInScope error.
+-- A recursive function might be compiled right now, thus the function is not yet in scope, but 
+-- the recursive call has already been tracked. If this is the case a jump back to this point
+-- is generated, otherwise the error is propagated.
+catchFunNotInScope :: [Expr]  -- The arguments given (must be 0 for a recursive function)
+                  -> CError  -- Only 'FunNotInScope' can be recovered
+                  -> Compile CState [Instruction]
+catchFunNotInScope args (FunNotInScope iden) = do
   s <- getRecursiveCall iden
   case s of 
-   Just s0 -> generate $ [Flip 1 s0 s0]    -- Jump back to starting point
    Nothing -> throwError (FunNotInScope iden)
-compileRecFunCall _ _ e = throwError e
+   Just s0 -> do checkArgs iden 0 args 
+                 generate $ [Flip 1 s0 s0]    -- Jump back to starting point
+
+catchFunNotInScope _ e = throwError e
 
 
-compileFunCall :: Identifier
-               -> [Expr]
-               -> (Recursive, Int, [Expr] -> Compile CState [Instruction])
+-- | Compiles a function call, given its definition.
+-- A 'CError' is thrown if the function is called with the wrong number of parameters.
+compileFunCall :: Identifier  -- The name of the function
+               -> [Expr]      -- The arguments passed to the function
+               -> (Recursive, Int, [Expr] -> Compile CState [Instruction]) -- The function definition
                -> Compile CState [Instruction]
 compileFunCall iden args (Rec, nargs, body) = do
   checkArgs iden nargs args
@@ -96,8 +103,12 @@ compileFunCall iden args (Rec, nargs, body) = do
   case s of 
     Just s0 -> generate $ [Flip 1 s0 s0]    -- Jump back to starting point
     Nothing -> body args
+
 compileFunCall iden args (NonRec, nargs, body) = checkArgs iden nargs args >> body args
 
+
+-- | @'checkArgs iden nargs args'@, throws an error if the number of arguments expected by the function
+-- (@nargs@) does not match the number of arguments given (@args@).
 checkArgs :: Identifier -> Int -> [Expr] -> Compile CState ()
 checkArgs iden nargs args = do
   let given = length args
@@ -122,7 +133,7 @@ checkArgs iden nargs args = do
 -- | b3   | s3 = s2 + |b2|
 -- | ...  |
 -- |______|
--- inst is executed, based on the instruction the control flow jumps to either @s1@ or @s2@, after one of 
+-- @inst@ is executed, based on the instruction the control flow jumps to either @s1@ or @s2@, after one of 
 -- this blocks is executed the control flows jump to @s3@
 compileAndReorder :: (Jumpable a, Jumpable b) => 
                        (AntState -> AntState -> Instruction) -- ^ The first instruction of the compiled code
@@ -146,37 +157,3 @@ assemblyLength b = do
   case runCompile (compile b) s of    -- TODO can we avoid to compile twice?
     Right (i,_) -> return $ length i
     Left e      -> throwError e
-
-checkTailRecursive :: Identifier -> StmBlock -> Compile CState ()
-checkTailRecursive iden b = do
-  tailRecursive <- isTailRecursive b
-  if tailRecursive 
-    then return ()
-    else throwError $ NotTailRecursive iden b
-
--- | Checks if the given function is tail recursive, i.e. eventually calls a recursive function.
-isTailRecursive :: StmBlock    -- ^ The body of the recursive function
-                -> Compile CState Bool
-isTailRecursive (StmBlock []) = return False
-isTailRecursive (StmBlock xs) = isTailRecursive' (last xs)
-
-
--- | Checks if the given statement represents a tail recursive call.
-isTailRecursive' (FunCall f _) = 
-  catchError (lookupFun f >>= isRecursive) recCall
-  where recCall (FunNotInScope f) = getRecursiveCall f >>= return . isJust
-        isRecursive (r,_,_) = return $ r == Rec
-isTailRecursive' (IfThenElse _ b1 b2) = bothTailRecursive b1 b2
-isTailRecursive' (Try          b1 b2) = bothTailRecursive b1 b2
-isTailRecursive' (WithProb   _ b1 b2) = bothTailRecursive b1 b2
-isTailRecursive' (Let _   b) = isTailRecursive b
-isTailRecursive' (For _ _ b) = isTailRecursive b
-isTailRecursive' _ = return False
-
-
--- | Checks if both the given 'StmBlock' are tail recursive
-bothTailRecursive :: StmBlock -> StmBlock -> Compile CState Bool
-bothTailRecursive b1 b2 = do
-  t1 <- isTailRecursive b1
-  t2 <- isTailRecursive b2
-  return $ t1 && t2

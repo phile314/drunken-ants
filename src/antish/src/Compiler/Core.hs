@@ -18,6 +18,7 @@ import Compiler.Class
 import Compiler.Precompile
 import Compiler.Compile
 import Compiler.Utility
+import Compiler.TailRecursion
 import Control.Monad.State
 import Data.Maybe
 
@@ -42,7 +43,7 @@ instance Compilable Statement where
 
   compile (FunCall iden args) =
     let simpleFunCall = lookupFun iden >>= compileFunCall iden args
-        recCall       = compileRecFunCall iden args in
+        recCall       = catchFunNotInScope args in
     catchError simpleFunCall recCall
 
   compile (Let bs b) = do
