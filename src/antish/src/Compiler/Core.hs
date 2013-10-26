@@ -1,14 +1,8 @@
 -- | Defines the compiling operations for the elements of the Ast
 
-{-# LANGUAGE FlexibleInstances #-}
-
 module Compiler.Core (
     module Compiler.Class
   ) where
-
--- TODO
--- A more efficient implementation of assemblyLenght should be provided, in addition a class for this 
--- feature should be declared and instance for each compilable element shold be provided
 
 import Ast
 import Assembly (Instruction, AntState) 
@@ -19,6 +13,9 @@ import Compiler.Precompile
 import Compiler.Compile
 import Compiler.Utility
 import Compiler.TailRecursion
+import Compiler.If
+import Compiler.BuiltIn
+import Compiler.Function
 import Control.Monad.State
 import Data.Maybe
 
@@ -26,7 +23,7 @@ instance Compilable a => Compilable (Maybe a) where
   compile (Just x) = compile x
   compile Nothing = return []
 
-instance Compilable a => Compilable [a] where
+instance (Compilable a) => Compilable [a] where
   compile xs = getJumpTo >>= compileWithJump xs
  
 -- The imported bindings are supposed to be already included in the top level declarations
@@ -91,6 +88,7 @@ instance Compilable Statement where
     sTo <- lookupLabel lbl
     return [(Flip 1 sTo sTo)]   -- TODO should be generate
 
+
 instance Compilable c => Jumpable [c] where
   compileWithJump []  _    = return []
   compileWithJump [x] j    = setJumpTo j >> compile x
@@ -109,16 +107,3 @@ instance Jumpable StmBlock where
 instance Jumpable c => Jumpable (Maybe c) where
   compileWithJump (Just c) j = compileWithJump c j
   compileWithJump Nothing  _ = return []
-
--------------------------------------------------------------------------------
--- | Inserts a binding in the proper environment
-insertBinding :: Binding -> Compile CState ()
-insertBinding (VarDecl iden expr) = addVarDecl iden expr
-insertBinding (FunDecl NonRec iden args b) = addFunDecl iden (length args) NonRec c
-  where c = precompile b args
-insertBinding (FunDecl Rec iden [] b) = do
-  let c = precompileRecFun iden b
-  addFunDecl iden 0 Rec c
-  checkTailRecursive iden b    -- can be checked ONLY after adding it
-
-insertBinding (FunDecl Rec iden xs _) = throwError $ InvalidRecFun iden xs

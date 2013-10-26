@@ -16,7 +16,9 @@ class Compilable c where
 -- | This class represents a piece of code that can be preprocessed, and not 
 -- directly compiled, because the value of some variables is not known yet. 
 class Compilable c => PreCompilable c where
-  precompile :: c -> [Identifier] -> ([Expr] -> Compile CState [Instruction])
+  precompile :: c 
+             -> [Identifier]  -- ^ The value of this variable is not known beforehand
+             -> ([Expr] -> Compile CState [Instruction]) -- ^ Given their value, @c@ can be compiled
 
 -------------------------------------------------------------------------------
 -- Jumpable Definition

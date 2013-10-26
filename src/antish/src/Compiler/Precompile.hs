@@ -1,4 +1,7 @@
--- | This module defines instances of the 'Precompile' class.
+-- | This module takes care of handling those elements that cannot directly be 
+-- compiled because some information is still missing.
+-- For instance a function declaration cannot be directly compiled because 
+-- its parameters instances are not knonw until a function call is provided.
 
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
 
