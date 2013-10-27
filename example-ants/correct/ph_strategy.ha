@@ -34,5 +34,5 @@ runAway = {
 }
 
 handleFood = {
-
+    Move;
 }
