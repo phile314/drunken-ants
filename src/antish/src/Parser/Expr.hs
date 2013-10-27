@@ -3,6 +3,7 @@
 module  Parser.Expr where
 
 import Ast ( Expr (..), Cond (..), SenseDir(..))
+import Assembly (LeftOrRight (..))
 import Control.Applicative
 import Text.Parsec.String
 import Text.Parsec.Combinator 
@@ -12,10 +13,15 @@ import Text.Parsec.Expr
 import Text.Read hiding (parens, choice)
 
 pExpr :: GenParser Char st Expr
-pExpr = pInt <|> pBoolExpr <|> pVar   -- TODO missing CDir
+pExpr = pInt <|> pDir <|> pBoolExpr <|> pVar   -- TODO missing CDir
 
 pInt :: GenParser Char st Expr
 pInt = ConstInt . fromIntegral <$> natural
+
+pDir :: GenParser Char st Expr
+pDir = left <|> right
+  where left  = CDir <$> (reserved "Left" *> pure IsLeft)
+        right = CDir <$> (reserved "Right" *> pure IsRight)
 
 pVar :: GenParser Char st Expr
 pVar = VarAccess <$> identifier
