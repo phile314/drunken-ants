@@ -45,7 +45,7 @@ run opts = do
         (Left e) -> error (show e)
         (Right k) -> return k
  
-  print p''
+  mapM_ (putStrLn . show) p''
 
   return ()
 
