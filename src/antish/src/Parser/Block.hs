@@ -16,7 +16,7 @@ pStatement :: GenParser Char st Statement
 pStatement = choice $ builtin ++ [pIfThenElse, pLet, pFor, pTry, pFunCall, pProp]
 
 pIfThenElse :: GenParser Char st Statement
-pIfThenElse = IfThenElse <$> pIf <*> pThen <*> pThen
+pIfThenElse = IfThenElse <$> pIf <*> pThen <*> pElse
   where pIf   = reserved "if" *> pBoolExpr 
         pThen = reserved "then" *> pStmBlock 
         pElse = (reserved "else" *> pStmBlock) <|> empty

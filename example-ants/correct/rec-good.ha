@@ -1,9 +1,9 @@
 main = {
-    f 1
+    f 1;
 }
 
 
-f x = {
+rec f x = {
     Move;
-    f x
+    f x;
 }
