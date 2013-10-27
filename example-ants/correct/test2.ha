@@ -6,7 +6,7 @@ turnBack = {
 
 goHome = { Move; }
 
-findFood = {
+rec findFood = {
   Move;
   try {
     PickUp;
