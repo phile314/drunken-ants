@@ -91,6 +91,7 @@ instance ToTree Statement where
   toTree (Try s1 s2)           = Node "Try" [toTree s1, toTree s2]
   toTree (Let bs ss)           = Node "Let" [toTree bs, toTree ss]
   toTree (WithProb p s1 s2)    = Node "WithProb" [(Node (show p) []), toTree s1, toTree s2]
+  toTree (PickUpCall)          = Node "PickUpCall" []
   toTree (DropCall)            = Node "DropCall" []
   toTree (TurnCall lr)         = Node ("TurnCall" ++ show lr) []
   toTree (MoveCall)            = Node "MoveCall" []

@@ -1,18 +1,18 @@
 turnBack = {
     for [1,2,3] {
-        turn;
+        Turn Left;
     }
 }
 
-goHome = { move; }
+goHome = { Move; }
 
 findFood = {
-  move;
+  Move;
   try {
-    pickUp;
+    PickUp;
     turnBack;
     goHome;
-    drop;
+    Drop;
     findFood;
   } catch {
     findFood;

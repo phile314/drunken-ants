@@ -28,7 +28,7 @@ instance (Compilable a) => Compilable [a] where
  
 -- The imported bindings are supposed to be already included in the top level declarations
 instance Compilable Program where
-  compile (Program _ tl) = compile $ Let tl (StmBlock [])
+  compile (Program _ tl) = compile $ Let tl (StmBlock [(FunCall "main" [])])
 
 instance Compilable StmBlock where
   compile (StmBlock xs) = compile xs
