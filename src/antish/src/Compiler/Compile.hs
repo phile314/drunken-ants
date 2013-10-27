@@ -30,7 +30,7 @@ module Compiler.Compile (
 
 import Control.Monad.State hiding (gets)
 import Control.Monad.Identity
-import Compiler.CompileT hiding (catchError)
+import Compiler.CompileT
 import Compiler.Error
 import Compiler.Scope as Scope
 import Ast
