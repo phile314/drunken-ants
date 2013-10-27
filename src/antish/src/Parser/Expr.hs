@@ -12,17 +12,21 @@ import Text.Parsec.Prim hiding ((<|>))
 import Text.Parsec.Expr
 import Text.Read hiding (parens, choice)
 
+-- | Parses an 'Expr'.
 pExpr :: GenParser Char st Expr
-pExpr = pInt <|> pDir <|> pBoolExpr <|> pVar   -- TODO missing CDir
+pExpr = pInt <|> pDir <|> pBoolExpr <|> pVar
 
+-- | Parses a constant integer literal.
 pInt :: GenParser Char st Expr
 pInt = ConstInt . fromIntegral <$> natural
 
+-- | Parses a direction (constants Left, Right).
 pDir :: GenParser Char st Expr
 pDir = left <|> right
   where left  = CDir <$> (reserved "Left" *> pure IsLeft)
         right = CDir <$> (reserved "Right" *> pure IsRight)
 
+-- | Parses a variable identifier
 pVar :: GenParser Char st Expr
 pVar = VarAccess <$> identifier
 
@@ -53,6 +57,8 @@ pCond = choice (pMarker:conditions)
   where conditions = map makeConstParser [Friend, Foe, FriendWithFood, FoeWithFood,
                                           Food, Rock, FoeMarker, Home, FoeHome]
 
+-- | Parsers for the special case 'Marker' 'Cond'.
+-- It expects also the marker number.
 pMarker :: GenParser Char st Cond
 pMarker = Marker <$> (reserved "Marker" *> natural)
 
