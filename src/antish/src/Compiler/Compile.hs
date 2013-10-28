@@ -11,6 +11,7 @@ module Compiler.Compile (
     , newScope
     , removeScope
     , insertParameters
+    , removeParameters
     , addVarDecl
     , addFunDecl
     , nextState
@@ -123,6 +124,12 @@ insertParameters args values = do
   let newEnv = father newScope env
   modify $ \s -> s { variables = newEnv }
 
+-- | Removes the previously added parameters from the scope
+removeParameters :: Compile CState ()
+removeParameters = do
+  x:_:xs <- varEnv
+  modify $ \s -> s { variables = (x:xs) }
+ 
 -- | The identifier is looked up among the declared functions.
 -- If the function is not in scope the monad fails with a 'CError'.
 lookupFun :: Identifier -> Compile CState FunDef

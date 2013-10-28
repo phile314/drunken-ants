@@ -18,7 +18,7 @@ instance Compilable c => PreCompilable c where  -- Check: Requires Undecidable i
   precompile c argNames = \args -> do 
     insertParameters argNames args
     i <- compile c
-    removeScope      -- Parameters Scope
+    removeParameters
     return i
 
 -- | Precompiles a recursive function, taking care of handling the recursive calls properly.
