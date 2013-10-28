@@ -1,8 +1,9 @@
-main = {
+rec main = {
     randDir;
     findFood;
     turnAround;
     goHome;
+    main;
 }
 
 
