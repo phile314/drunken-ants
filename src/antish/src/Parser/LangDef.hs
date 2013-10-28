@@ -29,4 +29,5 @@ comma = P.comma lexer
 braces = P.braces lexer
 brackets = P.brackets lexer
 semi = P.semi lexer
+whites = P.whiteSpace lexer
 

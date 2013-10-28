@@ -1,0 +1,105 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass{beamer}
+
+
+\mode<presentation>
+{
+  \usetheme{default}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{fancyvrb}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+% \title[Short Paper Title] % (optional, use only with long paper titles)
+
+\title{Ants for Dinner}
+\subtitle{Programming an ants strategy}
+
+\author{Laurens van den Brink, Philipp Hausmann, Marco Vassena}
+% - Give the names in the same order as the appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\date{30 October 2013}
+% - Either use conference name or its abbreviation.
+% - Not really informative to the audience, more for people (including
+%   yourself) who are reading the slides online
+
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%\begin{frame}{Outline}
+%  \tableofcontents
+%  % You might wish to add the option [pausesections]
+%\end{frame}
+
+\section{Programming an ants strategy}
+\begin{frame}{Programming an ants strategy approach}
+	\begin{itemize}
+		\item Custom syntax
+		\item Parsing
+		\item Abstract syntax tree
+		\item Compile
+		\item Output ant strategy
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Syntax}
+	\begin{block}{Example}
+		% SCREENSHOT
+	\end{block}
+\end{frame}
+
+\begin{frame}{Compiler}
+	\begin{itemize}
+		\item Compile Syntax tree
+		\item Function calls
+		\item Recursive functions
+	\end{itemize}
+\end{frame}
+
+\section{Demo}
+
+\begin{frame}{Demo}
+	\begin{itemize}
+		\item The strategy
+		\item Demonstration
+	\end{itemize}
+\end{frame}
+
+
+\end{document}
+
+

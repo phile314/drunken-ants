@@ -8,7 +8,7 @@ import Parser.Block
 import Parser.LangDef
 
 pProgram :: GenParser Char st Program
-pProgram = Program <$> (spaces *> many pImport) <*> pTop
+pProgram = Program <$> (spaces *> many pImport) <*>  (whites *> pTop)
 
 -- | Parses top level declarations (no let)
 pTop :: GenParser Char st [Binding]
@@ -16,3 +16,4 @@ pTop = many pBinding
 
 pImport :: GenParser Char st Identifier
 pImport = reserved "import" *> identifier
+
