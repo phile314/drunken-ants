@@ -41,7 +41,7 @@ instance Compilable Statement where
   compile (FunCall iden args) =
     let simpleFunCall = lookupFun iden >>= compileFunCall iden args
         recCall       = catchFunNotInScope args in
-    catchError simpleFunCall recCall
+    catchError simpleFunCall recCall >>= generate
 
   compile (Let bs b) = insertBindings bs b
 
