@@ -13,5 +13,5 @@ instance (Code c, Show c) => Code [c] where
   toCode xs = unlines $ map toCode xs
 
 instance Code Instruction where
-  toCode (Sense sd s0 s1 c) = unwords $ [show sd, show s0, show s1, toCode c]
+  toCode (Sense sd s0 s1 c) = unwords $ ["Sense", show sd, show s0, show s1, toCode c]
   toCode i = show i
