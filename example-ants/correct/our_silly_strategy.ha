@@ -17,11 +17,15 @@ rec goHome = {
 }
 
 rec findFood = {
-    if Food Here then {
-        PickUp;
-    } else {
+    if (Home Here) then {
         Move;
         findFood;
+    }
+    if (Food Here) then {
+        PickUp;
+    } else {
+      Move;
+      findFood;
     }
 }
 
