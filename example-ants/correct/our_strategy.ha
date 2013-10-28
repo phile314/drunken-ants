@@ -1,9 +1,11 @@
 main = {
-    randDir;
-    explore;
---    goHome;
---    main;
-    nothing;
+    with probability 1.0 do {
+        randDir;
+        explore;
+        nothing;
+    } otherwise {
+        nothing;
+    }
 }
 
 nop = { Turn Left; Turn Right; }
@@ -13,30 +15,54 @@ rec nothing = {
     nothing;
 }
 
+checkField = {
+    for [1,2,3,4,5] {
+        if (Marker 1 Ahead || Marker 2 Ahead || Marker 3 Ahead) then {
+            Turn Right;
+            Move;
+            Move;
+            explore;
+        }
+    }
+}
 
 rec explore = {
-    let f td1 td2 = {
-        Turn td1;
-        mark 5 3;
-        Turn td1;
-        Move;
+    let f k1 k2 = {
+        checkField;
+--        Mark 5;
+          Move;
+--        checkField;
+        Mark k1;
         isThereFood;
-        Turn td1;
-        mark 5 2;
-        Turn td2;
-        Move;
+ --       Turn Right;
+ --       Turn Right;
+--        Move;
+        checkField;
+        Mark k2;
         isThereFood;
-        Turn td2;
-        mark 5 1;
-        Turn td1;
         Move;
+--        Turn Left;
+--        Turn Left;
+    },
+    g m = {
         isThereFood;
-    } in {
+        checkField;
+        Move;
+        Mark m;
+        
+    }
+     in {
         try {
-            f Left Right;
-            f Right Left;
+            g 3;
+            g 2;
+            g 1;
             explore;
         } catch {
+            with probability 0.5 do {
+                Turn Left;
+            } otherwise {
+                Turn Right;
+            }
             explore;
         }
     }
@@ -45,8 +71,9 @@ rec explore = {
 isThereFood = {
     if Food Here then {
         PickUp;
+        turnAround;
         goHome;
-        explore;
+--        explore;
     }
 }
 
@@ -54,18 +81,18 @@ turnAround = { for [1,1,1] { Turn Left; } }
 
 rec f1 = {
     if Marker 2 Ahead then {
-        Move;
+        reallyMove;
     } else {
         if Marker 3 Ahead then {
             turnAround;
         } else {
             if Marker 2 LeftAhead then {
                 Turn Left;
-                Move;
+                reallyMove;
             } else {
                 if Marker 2 RightAhead then {
                     Turn Right;
-                    Move;
+                    reallyMove;
                 } else {
                     Turn Left;
                     goHome;
@@ -77,18 +104,18 @@ rec f1 = {
 }
 rec f2 = {
     if Marker 3 Ahead then {
-        Move;
+        reallyMove;
     } else {
         if Marker 1 Ahead then {
             turnAround;
         } else {
             if Marker 3 LeftAhead then {
                 Turn Left;
-                Move;
+                reallyMove;
             } else {
                 if Marker 3 RightAhead then {
                     Turn Right;
-                    Move;
+                    reallyMove;
                 } else {
                     Turn Left;
                     goHome;
@@ -100,18 +127,18 @@ rec f2 = {
 }
 rec f3 = {
     if Marker 1 Ahead then {
-        Move;
+        reallyMove;
     } else {
         if Marker 2 Ahead then {
             turnAround;
         } else {
             if Marker 1 LeftAhead then {
                 Turn Left;
-                Move;
+                reallyMove;
             } else {
                 if Marker 1 RightAhead then {
                     Turn Right;
-                    Move;
+                    reallyMove;
                 } else {
                     Turn Left;
                     goHome;
@@ -123,23 +150,31 @@ rec f3 = {
 }
 rec goHome = {
     if Marker 1 Ahead then {
-        f1;
-    }
-    if Marker 2 Ahead then {
-        f2;
-    }
-    if Marker 3 Ahead then {
         f3;
     }
-    with probability 0.5 do {
-        Turn Left;
-    } otherwise {
-        Turn Right;
+    if Marker 2 Ahead then {
+        f1;
     }
-    with probability 0.1 do {
-        Move;
-    } otherwise { nop; }
+    if Marker 3 Ahead then {
+        f2;
+    }
+--    with probability 0.5 do {
+--        Turn Left;
+--    } otherwise {
+--        Turn Right;
+--    }
+--    with probability 0.1 do {
+--        Move;
+--    } otherwise { nop; }
     goHome;
+}
+
+rec reallyMove = {
+    try {
+        Move;
+    } catch {
+        reallyMove;
+    }
 }
 
 randDir = {
