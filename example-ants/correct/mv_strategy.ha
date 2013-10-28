@@ -40,13 +40,13 @@ rec explore = {
   for x in [3, 2, 1] {
     if (Food Here) then { getFoodGoHome;}
     else {
-      Mark x;
       moveClear;
+      explore;
     }
   }
+  explore;
 }
 
-{-
 -- | Spreads the ant in different direction
 spread = {
   with probability 0.5 do { randomDir; Move; }
@@ -58,7 +58,6 @@ randomDir = {
   with probability 0.5 do { Turn Left; }
   otherwise { Turn Right; }
 }
--}
 
 -- Marks used
     -- 1 2 3 points to anthill

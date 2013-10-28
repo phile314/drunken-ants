@@ -13,7 +13,7 @@ pStmBlock :: GenParser Char st StmBlock
 pStmBlock = StmBlock <$> braces (many1 pStatement)
 
 pStatement :: GenParser Char st Statement
-pStatement = choice $ builtin ++ [pIfThenElse, pLet, pFor, pTry, pFunCall, pProp]
+pStatement = choice $ builtin ++ [pIfThenElse, pLet, pFor, pTry, pProp, pFunCall]
 
 pIfThenElse :: GenParser Char st Statement
 pIfThenElse = IfThenElse <$> pIf <*> pThen <*> pElse

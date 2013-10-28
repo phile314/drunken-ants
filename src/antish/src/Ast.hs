@@ -95,6 +95,7 @@ instance ToTree Statement where
   toTree (DropCall)            = Node "DropCall" []
   toTree (TurnCall lr)         = Node ("TurnCall" ++ show lr) []
   toTree (MoveCall)            = Node "MoveCall" []
+  toTree (MarkCall n)          = Node ("MarkCall" ++ show n) []
   toTree (Label lbl)           = Node ("Label " ++ lbl) []
   toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
 
