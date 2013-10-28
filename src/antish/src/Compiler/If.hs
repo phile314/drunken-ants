@@ -17,14 +17,14 @@ compileIf :: (Compilable Statement, Jumpable StmBlock) =>
           -> StmBlock   -- ^ The "else" branch
           -> Compile CState [Instruction]
 compileIf (And e1 e2) b1 b2 = do
-  [Sense c1 s1 _ sd1] <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
+  (Sense c1 s1 _ sd1):xs <- compile (IfThenElse e1 (StmBlock []) (StmBlock []))
   if2@((Sense _ s3 s4 _):_) <- compileIf e2 b1 b2
-  return $ (Sense c1 s1 s4 sd1):if2
+  return $ [Sense c1 s1 s4 sd1] ++ xs ++ if2
 
 compileIf (Or e1 e2) b1 b2 = do
-  [Sense c1 s0 _ sd1] <- compileIf e1 (StmBlock []) (StmBlock [])
+  (Sense c1 s0 _ sd1):xs <- compileIf e1 (StmBlock []) (StmBlock [])
   if2@((Sense _ s1 s2 _):_) <- compileIf e2 b1 b2
-  return $ (Sense c1 s1 s0 sd1):if2
+  return $ [Sense c1 s1 s0 sd1] ++ xs ++ if2
 
 compileIf (Not e) b1 b2 = do
   (Sense c s1 s2 sd):xs <- compileIf e b1 b2
