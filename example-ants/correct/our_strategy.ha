@@ -121,7 +121,14 @@ rec f3 = {
     }
     f1;
 }
+-- I suppose I am bringing food.
+-- It will bring the food home following the path (1,2,3)
+-- and eventually when there will call protectFood
 rec goHome = {
+    if Home Here then {
+      Drop;
+      protectFood;
+    }
     if Marker 1 Ahead then {
         f1;
     }
@@ -166,3 +173,18 @@ mark o i = {
     isThereFood;
     Mark o;
 }
+
+-- After bringing back some food an ant stops on the first anthill cell it founds,
+-- drops the food, and waits until another ant with other food comes back.
+-- The new ant will substitute the first ant in the task of protecting the food.
+-- The first ant starts exploring again.
+rec protectFood = {
+  -- I suppose I am on an anthill cell and I have already dropped my food
+  if FriendWithFood Ahead then {
+    explore;
+  } else {
+    Turn Left;
+    protectFood;
+  }
+}
+
