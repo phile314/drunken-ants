@@ -6,6 +6,8 @@ main = {
     nothing;
 }
 
+nop = { Turn Left; Turn Right; }
+
 rec nothing = {
     Drop;
     nothing;
@@ -53,38 +55,71 @@ turnAround = { for [1,1,1] { Turn Left; } }
 rec f1 = {
     if Marker 2 Ahead then {
         Move;
-        f2;
     } else {
         if Marker 3 Ahead then {
             turnAround;
-            f2;
+        } else {
+            if Marker 2 LeftAhead then {
+                Turn Left;
+                Move;
+            } else {
+                if Marker 2 RightAhead then {
+                    Turn Right;
+                    Move;
+                } else {
+                    Turn Left;
+                    goHome;
+                }
+            }
         }
-        -- TODO else
     }
+    f2;
 }
 rec f2 = {
     if Marker 3 Ahead then {
         Move;
-        f3;
     } else {
         if Marker 1 Ahead then {
             turnAround;
-            f3;
+        } else {
+            if Marker 3 LeftAhead then {
+                Turn Left;
+                Move;
+            } else {
+                if Marker 3 RightAhead then {
+                    Turn Right;
+                    Move;
+                } else {
+                    Turn Left;
+                    goHome;
+                }
+            }
         }
-        -- TODO else
     }
+    f3;
 }
 rec f3 = {
     if Marker 1 Ahead then {
         Move;
-        f1;
     } else {
         if Marker 2 Ahead then {
             turnAround;
-            f1;
+        } else {
+            if Marker 1 LeftAhead then {
+                Turn Left;
+                Move;
+            } else {
+                if Marker 1 RightAhead then {
+                    Turn Right;
+                    Move;
+                } else {
+                    Turn Left;
+                    goHome;
+                }
+            }
         }
-        -- TODO else
     }
+    f1;
 }
 rec goHome = {
     if Marker 1 Ahead then {
@@ -101,6 +136,9 @@ rec goHome = {
     } otherwise {
         Turn Right;
     }
+    with probability 0.1 do {
+        Move;
+    } otherwise { nop; }
     goHome;
 }
 
@@ -115,7 +153,7 @@ randDir = {
     } otherwise {
         with probability 0.5 do {
             Turn Right;
-        } otherwise { Drop; }
+        } otherwise { nop; }
     }
 }
 
