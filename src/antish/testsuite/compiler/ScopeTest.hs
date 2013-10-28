@@ -10,7 +10,8 @@ import Util
 
 -- | The tests that will be run
 scopeTests :: Test
-scopeTests = TestLabel "Scope" $ TestList [simpleDecl, shadowDecl, moreDecls, simpleFun, nestedFun]
+scopeTests = TestLabel "Scope" $ TestList tests
+  where tests = [simpleDecl, shadowDecl, moreDecls, simpleFun, nestedFun, funCallInBlock, nestedCallInBlock]
 
 -- | A simple expression declaration and use
 --
@@ -71,3 +72,26 @@ nestedFun = testCode expected input
         b1       = StmBlock [funDecl "g" gBody b2]
         b2       = StmBlock [FunCall "f" [CDir IsRight]]
         funDecl i b = Let [FunDecl NonRec i ["x"] b]
+
+-- | Tests a function call inside a block NOT as first statement
+--
+-- > let f x = {Mark 1, Turn x} in
+-- >    Drop
+-- >    f Left
+--
+funCallInBlock = testCode expected input
+  where expected = [Drop 1, Mark 1 2, Turn IsLeft 3]
+        input = compile $ Let [f] (StmBlock [DropCall, FunCall "f" [(CDir IsLeft)]])
+        f     = FunDecl NonRec "f" ["x"] (StmBlock [MarkCall (ConstInt 1), TurnCall (VarAccess "x")])
+
+-- | Tested funcall inside another function call with other instructions around
+--
+-- > let g = {Drop; f Left, Mark 2}
+-- > let f x = {Mark 1, Turn x} in
+-- >    g 
+--
+nestedCallInBlock = testCode expected input
+  where expected = [Drop 1, Mark 1 2, Turn IsLeft 3, Mark 2 4]
+        input    = compile $ Let [g, f] (StmBlock [FunCall "g" []])
+        g        = FunDecl NonRec "g" [] (StmBlock [DropCall, FunCall "f" [CDir IsLeft], MarkCall (ConstInt 2)])
+        f        = FunDecl NonRec "f" ["x"] (StmBlock [MarkCall (ConstInt 1), TurnCall (VarAccess "x")])
