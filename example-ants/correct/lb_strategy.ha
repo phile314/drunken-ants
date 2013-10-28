@@ -1,41 +1,39 @@
-
-main = {
-    findFood;
+rec main = {
+	explore;
 }
 
-rec findFood = {
-    if Food Ahead then {
-        food;
-    } else {
-		if (Marker 1 Ahead) then {
-			Turn Right;
-		} else {
-			Move;
+rec explore = {
+	try {
+		let marks = (Marker 1 Ahead || Marker 2 Ahead || Marker 3 Ahead || Marker 4 Ahead),
+			go m = {
+				food;
+				Move;
+
+				if !(marks) then {
+					Mark m;	
+				}
+			}
+		in {
+			go 1;
+			go 2;
+			go 3;
 		}
-		findFood;
+	} catch {
+		Turn Right;
+		Move;
+	}
+	explore;
+}
+
+
+rec food = {
+	if (Food Here) then {
+		defend;
 	}
 }
 
-food = {
-	PickUp; 
-	uturn;
-	goHome;
+rec defend = {
+	Turn Right;
+	defend;
 }
 
-uturn = {
-	Turn Right;
-	Turn Right;
-	Turn Right;
-}
-
-goHome = {
-	if (Home Here) then {
-		Drop;
-	} else {
-		if (Marker 1 Here) then {
-			Move;
-		} else {
-			Turn Left;
-		}
-	}
-}
