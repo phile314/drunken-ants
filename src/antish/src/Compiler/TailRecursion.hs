@@ -34,17 +34,17 @@ isTailRecursive' (FunCall f _) recs =
   catchError (lookupFun f >>= isRecursive) recCall
   where recCall (FunNotInScope f) = return $ elem f recs
         isRecursive (r,_,_)       = return $ r == Rec
-isTailRecursive' (IfThenElse _ b1 b2) recs = bothTailRecursive b1 b2 recs
-isTailRecursive' (Try          b1 b2) recs = bothTailRecursive b1 b2 recs
-isTailRecursive' (WithProb   _ b1 b2) recs = bothTailRecursive b1 b2 recs
+isTailRecursive' (IfThenElse _ b1 b2) recs = oneIsTailRecursive b1 b2 recs
+isTailRecursive' (Try          b1 b2) recs = oneIsTailRecursive b1 b2 recs
+isTailRecursive' (WithProb   _ b1 b2) recs = oneIsTailRecursive b1 b2 recs
 isTailRecursive' (Let _   b) recs = isTailRecursive b recs
 isTailRecursive' (For _ _ b) recs = isTailRecursive b recs
 isTailRecursive' _           _    = return False
 
 
--- | Checks if both the given 'StmBlock' are tail recursive
-bothTailRecursive :: StmBlock -> StmBlock -> [Identifier] -> Compile CState Bool
-bothTailRecursive b1 b2 recs = do
+-- | Checks if at least one of the given 'StmBlock' is tail recursive
+oneIsTailRecursive :: StmBlock -> StmBlock -> [Identifier] -> Compile CState Bool
+oneIsTailRecursive b1 b2 recs = do
   t1 <- isTailRecursive b1 recs
   t2 <- isTailRecursive b2 recs
-  return $ t1 && t2
+  return $ t1 || t2
