@@ -1,4 +1,0 @@
-\beamer@endinputifotherversion {3.10pt}
-\select@language {english}
-\beamer@sectionintoc {1}{Programming an ants strategy}{2}{0}{1}
-\beamer@sectionintoc {2}{Demo}{5}{0}{2}
