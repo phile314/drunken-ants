@@ -8,6 +8,7 @@ import Control.Monad.Error
 import Simplify
 import Control.Monad.Identity
 import Compiler
+import Code
 
 data Options = Options
   { showAST :: Bool
@@ -45,7 +46,7 @@ run opts = do
         (Left e) -> error (show e)
         (Right k) -> return k
  
-  mapM_ (putStrLn . show) p''
+  putStr $ toCode p''
 
   return ()
 
