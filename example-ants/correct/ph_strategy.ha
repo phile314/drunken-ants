@@ -1,5 +1,5 @@
 
-main = {
+rec main = {
     explore;
 }
 
@@ -29,6 +29,15 @@ runAway = {
         Turn Left;
     }
     for [1,1,1] {
+        Move;
+    }
+    runProb;
+}
+rec runProb = {
+    with probability 0.75 do {
+        Move;
+        runProb;
+    } otherwise {
         Move;
     }
 }
