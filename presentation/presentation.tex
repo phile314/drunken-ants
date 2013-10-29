@@ -66,46 +66,71 @@
 %\end{frame}
 
 \section{Programming an ants strategy}
-\begin{frame}{Programming an ants strategy approach}
+\begin{frame}{Approach}
+	Design and implement a DSL, which allows to define a strategy in a natural way.
+\end{frame}
+
+\begin{frame}[fragile]{DSL}
+	Our custom language provides imperative features:
 	\begin{itemize}
-		\item Custom language (DSL)
-		\item Parsing
-		\item Abstract syntax tree
-		\item Compile
-		\item Output ant strategy
+		\item Blocks and statements
+		\item For Loop
+		\item If - Then - Else
+		\item Scoped bindings (variables and local functions)
+		\item Try - Catch
+		\item Top level declarations
+		\item Procedures
+		\item Mutual tail recursion
+		\item Modules
 	\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Syntax}
+
+\begin{frame}
 	\begin{block}{Example}
 	\end{block}
 \end{frame}
 
+
+\begin{frame}{Parser}
+
+	\begin{itemize}
+		\item Matches the input file with the grammar of the language
+		\item Constructs the abstract syntax tree (AST).
+		\item Loads and parses recursively any imported module.
+		\item Uses Parsec library.
+	\end{itemize}
+	
+\end{frame}
+
 \begin{frame}{Compiler}
 	\begin{itemize}
-		\item Compile Syntax tree
-		\item Function calls
-		\item Recursive functions
+		\item Compiles the syntax tree into the assembly code
+		\item Inline bindings
+		\item Handles function calls and recursion
+		\item Reports errors
 	\end{itemize}
 \end{frame}
 
-\section{Demo}
+\section{Strategy}
 
-\begin{frame}{Demo}
-	\begin{itemize}
-		\item The strategy
-		\item Demonstration
-	\end{itemize}
+\begin{frame}{Strategy}
+	Essential strategy:
+	\begin{enumerate}	
+		\item Random walk
+		\item Pick up food
+		\item Go back home
+		\item Drop food
+	\end{enumerate}
 \end{frame}
 
-\begin{frame}{Other Ideas}
+\begin{frame}{Further Work}
     \begin{itemize}
         \item Duplicated code elimination
         \item More syntactic sugar (while, else-if, switch statement)
         \item Relax recursion constraints (allow parameters)
+       	\item Extend variables
     \end{itemize}
 \end{frame}
 
 \end{document}
-
-
