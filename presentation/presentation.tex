@@ -17,6 +17,7 @@
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 
+\usepackage{listings}
 \usepackage{times}
 \usepackage[T1]{fontenc}
 \usepackage{fancyvrb}
@@ -37,6 +38,7 @@
 % - Either use conference name or its abbreviation.
 % - Not really informative to the audience, more for people (including
 %   yourself) who are reading the slides online
+
 
 
 % Delete this, if you do not want the table of contents to pop up at
@@ -85,9 +87,10 @@
 	\end{itemize}
 \end{frame}
 
-
+\lstset{basicstyle=\footnotesize}
 \begin{frame}
 	\begin{block}{Example}
+        \lstinputlisting{../example-ants/correct/pres_ant.ha}
 	\end{block}
 \end{frame}
 

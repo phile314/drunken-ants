@@ -1,9 +1,13 @@
 main = {
-    with probability 1.0 do {
-        randDir;
-        explore;
-        nothing;
-    } otherwise {
+    try {
+        with probability 1.0 do {
+            randDir;
+            explore;
+            nothing;
+        } otherwise {
+            nothing;
+        }
+    } catch {
         nothing;
     }
 }
@@ -27,35 +31,17 @@ checkField = {
 }
 
 rec explore = {
-    let f k1 k2 = {
-        checkField;
---        Mark 5;
-          Move;
---        checkField;
-        Mark k1;
-        isThereFood;
- --       Turn Right;
- --       Turn Right;
---        Move;
-        checkField;
-        Mark k2;
-        isThereFood;
-        Move;
---        Turn Left;
---        Turn Left;
-    },
-    g m = {
+    let g m = {
         isThereFood;
         checkField;
         Move;
         Mark m;
-        
     }
      in {
         try {
-            g 3;
-            g 2;
             g 1;
+            g 2;
+            g 3;
             explore;
         } catch {
             with probability 0.5 do {
@@ -80,56 +66,14 @@ isThereFood = {
 turnAround = { for [1,1,1] { Turn Left; } }
 
 rec f1 = {
-    if Marker 2 Ahead then {
-        reallyMove;
-    } else {
-        if Marker 3 Ahead then {
-            turnAround;
-        } else {
-            if Marker 2 LeftAhead then {
-                Turn Left;
-                reallyMove;
-            } else {
-                if Marker 2 RightAhead then {
-                    Turn Right;
-                    reallyMove;
-                } else {
-                    Turn Left;
-                    goHome;
-                }
-            }
-        }
+    if Home Here then {
+      Drop;
+      protectFood;
     }
-    f2;
-}
-rec f2 = {
-    if Marker 3 Ahead then {
+    if Marker 1 Ahead || Home Ahead then {
         reallyMove;
     } else {
-        if Marker 1 Ahead then {
-            turnAround;
-        } else {
-            if Marker 3 LeftAhead then {
-                Turn Left;
-                reallyMove;
-            } else {
-                if Marker 3 RightAhead then {
-                    Turn Right;
-                    reallyMove;
-                } else {
-                    Turn Left;
-                    goHome;
-                }
-            }
-        }
-    }
-    f3;
-}
-rec f3 = {
-    if Marker 1 Ahead then {
-        reallyMove;
-    } else {
-        if Marker 2 Ahead then {
+        if Marker 3 Ahead || Marker 2 Ahead then {
             turnAround;
         } else {
             if Marker 1 LeftAhead then {
@@ -146,24 +90,74 @@ rec f3 = {
             }
         }
     }
+    f3;
+}
+rec f2 = {
+    if Home Here then {
+      Drop;
+      protectFood;
+    }
+    if Marker 2 Ahead || Home Ahead then {
+        reallyMove;
+    } else {
+        if Marker 1 Ahead || Marker 3 Ahead then {
+            turnAround;
+        } else {
+            if Marker 2 LeftAhead then {
+                Turn Left;
+                reallyMove;
+            } else {
+                if Marker 2 RightAhead then {
+                    Turn Right;
+                    reallyMove;
+                } else {
+                    Turn Left;
+                    goHome;
+                }
+            }
+        }
+    }
     f1;
+}
+rec f3 = {
+    if Home Here then {
+      Drop;
+      protectFood;
+    }
+    if Marker 3 Ahead || Home Ahead then {
+        reallyMove;
+    } else {
+        if Marker 1 Ahead || Marker 2 Ahead then {
+            turnAround;
+        } else {
+            if Marker 1 LeftAhead then {
+                Turn Left;
+                reallyMove;
+            } else {
+                if Marker 1 RightAhead then {
+                    Turn Right;
+                    reallyMove;
+                } else {
+                    reallyTurnLeft;
+                    goHome;
+                }
+            }
+        }
+    }
+    f2;
 }
 -- I suppose I am bringing food.
 -- It will bring the food home following the path (1,2,3)
 -- and eventually when there will call protectFood
 rec goHome = {
-    if Home Here then {
-      Drop;
-      protectFood;
-    }
     if Marker 1 Ahead then {
-        f3;
-    }
-    if Marker 2 Ahead then {
         f1;
     }
-    if Marker 3 Ahead then {
+    if Marker 2 Ahead then {
         f2;
+    }
+    if Marker 3 Ahead then {
+        f3;
     }
 --    with probability 0.5 do {
 --        Turn Left;
@@ -173,15 +167,28 @@ rec goHome = {
 --    with probability 0.1 do {
 --        Move;
 --    } otherwise { nop; }
-    goHome;
+--    goHome;
+}
+
+rec reallyTurnLeft = {
+    try {
+        Turn Left;
+    } catch {
+        reallyTurnLeft;
+    }
 }
 
 rec reallyMove = {
-    try {
-        Move;
-    } catch {
+    if Foe Ahead || Rock Ahead || Friend Ahead then {
         reallyMove;
+    } else {
+        Move;
     }
+--    try {
+--        Move;
+--    } catch {
+--        reallyMove;
+--    }
 }
 
 randDir = {
@@ -199,15 +206,6 @@ randDir = {
     }
 }
 
-mark o i = {
-    Mark o;
-    Move;
-    isThereFood;
-    Mark i;
-    Move;
-    isThereFood;
-    Mark o;
-}
 
 -- After bringing back some food an ant stops on the first anthill cell it founds,
 -- drops the food, and waits until another ant with other food comes back.
