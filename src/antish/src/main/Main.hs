@@ -5,7 +5,6 @@ import System.Environment
 import Ast
 import Options.Applicative
 import Control.Monad.Error
-import Simplify
 import Control.Monad.Identity
 import Compiler
 import Code
@@ -37,11 +36,6 @@ run opts = do
               when (showAST opts) $ print p
               return k
 
-  {-p'' <- case (simplify p') of
-              (Left e) -> error (show e)
-              (Right k) -> do
-                when (showAST opts) $ print k
-                return k-}
   p'' <- case (compile p') of
         (Left e) -> error (show e)
         (Right k) -> return k
