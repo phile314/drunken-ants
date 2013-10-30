@@ -12,7 +12,7 @@ import Parser.LangDef
 
 -- | A list containing the built-in parsers
 builtin :: [GenParser Char st Statement]
-builtin = [pMark, pUnMark, pTurn, pDrop, pPickUp, pMove, pLabel]
+builtin = [pMark, pUnMark, pTurn, pDrop, pPickUp, pMove]
 
 -- | @'withExpr' s@ parses "s <expr> ;" and returns the parsed expression.
 -- Note that @s@ is considered a reserved word.
@@ -42,5 +42,3 @@ pPickUp = withComma "PickUp" *> pure PickUpCall
 pMove :: GenParser Char st Statement
 pMove = withComma "Move" *> pure MoveCall 
 
-pLabel :: GenParser Char st Statement
-pLabel = Label <$> (reserved "Label" *> identifier <* semi)

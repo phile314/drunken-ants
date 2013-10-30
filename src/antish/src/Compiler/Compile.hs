@@ -25,9 +25,7 @@ module Compiler.Compile (
     , goNext
     , setRecursiveCall
     , unsetRecursiveCall
-    , getRecursiveCall
-    , addLabel
-    , lookupLabel) where
+    , getRecursiveCall) where
 
 import Control.Monad.State hiding (gets)
 import Control.Monad.Identity
@@ -61,7 +59,6 @@ data CState = CState {   currentState :: AntState -- ^ The first available state
                        , jumpTo    :: (AntState -> AntState)  -- ^ Returns where to jump after the current instruction have been executed if it succeds
                        , onFailure :: [AntState]        -- ^ Where to jump on failure
                        , recursive :: M.Map Identifier AntState   -- ^ Tracks the tail recursive calls
-                       , labels    :: M.Map String AntState
                      } 
 
 -- | 'FunDef' represents a function definition. The first element is the number of parameters and the second
@@ -72,7 +69,7 @@ type VarDef = Expr
 
 -- | The empty CState
 empty :: CState
-empty = CState 0 Scope.empty Scope.empty (+1) [0] M.empty M.empty
+empty = CState 0 Scope.empty Scope.empty (+1) [0] M.empty
 
 -------------------------------------------------------------------------------
 -- Utility functions
@@ -222,9 +219,3 @@ getRecursiveCall iden = do
   rec <- recEnv
   return $ M.lookup iden rec
 
-
-addLabel :: String -> AntState -> Compile CState ()
-addLabel lbl as = modify $ \s -> s { labels = M.insert lbl as (labels s) }
-
-lookupLabel :: String -> Compile CState AntState
-lookupLabel lbl = gets ((M.! lbl) . labels)

@@ -13,7 +13,7 @@ data Options = Options
   { showAST :: Bool
   , srcFile :: String }
 
--- TODO
+
 options :: Parser Options
 options = Options
   <$> switch ( long "show-ast" <> short 's' <> help "Show generated AST Tree." )

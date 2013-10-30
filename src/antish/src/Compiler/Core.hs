@@ -80,11 +80,6 @@ instance Compilable Statement where
     CDir d <- eval EDir e
     safeFunCall (Turn d)
 
-  compile (Label lbl) = nextState >>= addLabel lbl >> return []
-  compile (JumpTo lbl) = do
-    sTo <- lookupLabel lbl
-    return [(Flip 1 sTo sTo)]   -- TODO should be generate
-
 
 instance Compilable c => Jumpable [c] where
   compileWithJump []  _    = return []

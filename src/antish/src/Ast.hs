@@ -34,9 +34,6 @@ data Statement =
   | DropCall
   | PickUpCall
   | MoveCall
-  -- only jumps to the same or a higher level of the AST are supported, jumps down into the children of a node are not.
-  | Label String
-  | JumpTo String
   deriving (Eq, Data, Typeable, Show)
 
 data Binding =
@@ -96,8 +93,6 @@ instance ToTree Statement where
   toTree (TurnCall lr)         = Node ("TurnCall" ++ show lr) []
   toTree (MoveCall)            = Node "MoveCall" []
   toTree (MarkCall n)          = Node ("MarkCall" ++ show n) []
-  toTree (Label lbl)           = Node ("Label " ++ lbl) []
-  toTree (JumpTo lbl)          = Node ("JumpTo " ++ lbl) []
 
 instance ToTree Expr where
   toTree (ConstInt i)   = Node ("ConstInt " ++ (show i)) []
