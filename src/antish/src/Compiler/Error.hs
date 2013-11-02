@@ -3,6 +3,7 @@
 module Compiler.Error where
 
 import Ast
+import Tree
 import Control.Monad.Error
 
 data CError = 
@@ -43,7 +44,7 @@ instance Show CError where
 
   show (NotTailRecursive iden b) = what ++ why 
     where what = "The function " ++ iden ++ " is not tail-recursive."
-          why = "\nIts body is\n" ++ show (UseTree b)
+          why = "\nIts body is\n" ++ drawAst b
 
   show (InvalidRecFun iden xs) = iden ++ ": invalid recursive function declaration, " ++ what
     where what = "no parameters can be passed, (" ++ show (length xs) ++ " given)\n"

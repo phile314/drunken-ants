@@ -8,6 +8,7 @@ import Control.Monad.Error
 import Control.Monad.Identity
 import Compiler
 import Code
+import Tree
 
 data Options = Options
   { showAST :: Bool
@@ -33,7 +34,7 @@ run opts = do
   p' <- case p of
             (Left e) -> error (show e)
             (Right k) -> do
-              when (showAST opts) $ print p
+              when (showAST opts) $ putStrLn (drawAst k)
               return k
 
   p'' <- case (compile p') of
