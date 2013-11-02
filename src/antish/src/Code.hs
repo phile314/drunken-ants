@@ -1,8 +1,12 @@
+-- | This module defines how to represent assembly instructions, so that they
+-- are correctly parsed by the simulator.
+
 module Code where
 
 import Assembly
 
 class Code c where
+  -- | Provides a string representation accepeted by the simulator.
   toCode :: (Show c) => c -> String
 
 instance Code Cond where

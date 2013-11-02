@@ -10,8 +10,7 @@ import qualified Compiler.Core as CO
 import Compiler.Error
 
 -- | Returns the assembly instructions representing the given program in low-level ant code.
+-- If the program is not correct a 'CError' is returned.
 compile :: Program -> Either CError [Instruction]
-compile p = do
-  (is, _) <- runCompile (CO.compile p) empty
-  return is
+compile p = runCompile (CO.compile p) empty >>= return . fst
   

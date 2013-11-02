@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
+-- | This module, mainly copied from the evaluator, defines datatypes for the assembly language.
+
 module Assembly (
     Instruction (..)
   , Cond (..)
@@ -11,7 +13,6 @@ module Assembly (
 
 import Data.Data
 
--- FIX copy and paste:  it would be nice to import this directly from the Simulator mode 
 type AntState = Int 
 
 data Instruction 
@@ -30,6 +31,7 @@ data SenseDir = Here | Ahead | LeftAhead | RightAhead deriving (Show, Eq, Data, 
 type MarkerNumber = Int -- 0..5
 
 data LeftOrRight = IsLeft | IsRight deriving (Eq, Data, Typeable)
+
 instance Show LeftOrRight where
     show IsLeft  = "Left"
     show IsRight = "Right"
