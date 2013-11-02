@@ -1,3 +1,5 @@
+-- | Provides high level features for compiling a 'Program'.
+
 module Compiler (
   compile,
   module Compiler.Error
