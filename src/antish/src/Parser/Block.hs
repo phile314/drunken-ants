@@ -1,13 +1,15 @@
+-- | This module defines the parser for the 'Block' and the 'Statement' datatypes.
+
 module Parser.Block where
 
-import Control.Applicative hiding ((<|>), many)
-import Text.Parsec.Prim
 import Ast
+import Control.Applicative hiding ((<|>), many)
+import Data.Maybe
 import Parser.LangDef
 import Parser.Expr
 import Parser.Builtin
+import Text.Parsec.Prim
 import Text.Parsec.Combinator
-import Data.Maybe
 
 pStmBlock :: GenParser Char st StmBlock
 pStmBlock = StmBlock <$> braces (many1 pStatement)

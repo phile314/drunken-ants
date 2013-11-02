@@ -1,3 +1,5 @@
+-- | Defines the parser for 'Program'.
+
 module Parser.Program where
 
 import Ast
@@ -7,6 +9,7 @@ import Text.Parsec.Prim
 import Parser.Block
 import Parser.LangDef
 
+-- | Parses a program
 pProgram :: GenParser Char st Program
 pProgram = Program <$> (spaces *> many pImport) <*>  (whites *> pTop)
 
@@ -14,6 +17,7 @@ pProgram = Program <$> (spaces *> many pImport) <*>  (whites *> pTop)
 pTop :: GenParser Char st [Binding]
 pTop = many pBinding
 
+-- | Parses imports statements
 pImport :: GenParser Char st Identifier
 pImport = reserved "import" *> identifier
 

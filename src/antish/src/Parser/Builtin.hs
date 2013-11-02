@@ -5,10 +5,10 @@ module Parser.Builtin (builtin) where
 
 import Ast
 import Control.Applicative hiding ((<|>), many)
-import Text.Parsec.Combinator
-import Text.Parsec.Prim
 import Parser.Expr
 import Parser.LangDef
+import Text.Parsec.Combinator
+import Text.Parsec.Prim
 
 -- | A list containing the built-in parsers
 builtin :: [GenParser Char st Statement]
@@ -41,4 +41,3 @@ pPickUp = withComma "PickUp" *> pure PickUpCall
 
 pMove :: GenParser Char st Statement
 pMove = withComma "Move" *> pure MoveCall 
-
