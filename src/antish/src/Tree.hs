@@ -51,5 +51,6 @@ instance ToTree Expr where
   toTree (Or  b1 b2) = Node "Or"  [toTree b1, toTree b2]
   toTree s = Node (show s) []
 
+-- | Provides a neat representation of a 'ToTree' value.
 drawAst :: ToTree a => a -> String
 drawAst = drawTree . toTree

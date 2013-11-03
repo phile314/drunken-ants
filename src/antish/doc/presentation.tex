@@ -1,0 +1,139 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass{beamer}
+
+
+\mode<presentation>
+{
+  \usetheme{default}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{listings}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{fancyvrb}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+% \title[Short Paper Title] % (optional, use only with long paper titles)
+
+\title{Ants for Dinner}
+\subtitle{Programming an ants strategy}
+
+\author{Laurens van den Brink, Philipp Hausmann, Marco Vassena}
+% - Give the names in the same order as the appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\date{30 October 2013}
+% - Either use conference name or its abbreviation.
+% - Not really informative to the audience, more for people (including
+%   yourself) who are reading the slides online
+
+
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%\begin{frame}{Outline}
+%  \tableofcontents
+%  % You might wish to add the option [pausesections]
+%\end{frame}
+
+\section{Programming an ants strategy}
+\begin{frame}{Approach}
+	Design and implement a DSL, which allows to define a strategy in a natural way.
+\end{frame}
+
+\begin{frame}[fragile]{DSL}
+	Our custom language provides imperative features:
+	\begin{itemize}
+		\item Blocks and statements
+		\item For Loop
+		\item If - Then - Else
+		\item Scoped bindings (variables and local functions)
+		\item Try - Catch
+		\item Top level declarations
+		\item Procedures
+		\item Mutual tail recursion
+		\item Modules
+	\end{itemize}
+\end{frame}
+
+\lstset{basicstyle=\footnotesize}
+\begin{frame}
+	\begin{block}{Example}
+        \lstinputlisting{../example-ants/correct/pres_ant.ha}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}{Parser}
+
+	\begin{itemize}
+		\item Matches the input file with the grammar of the language
+		\item Constructs the abstract syntax tree (AST).
+		\item Loads and parses recursively any imported module.
+		\item Uses Parsec library.
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}{Compiler}
+	\begin{itemize}
+		\item Compiles the syntax tree into the assembly code
+		\item Inline bindings
+		\item Handles function calls and recursion
+		\item Reports errors
+	\end{itemize}
+\end{frame}
+
+\section{Strategy}
+
+\begin{frame}{Strategy}
+	Essential strategy:
+	\begin{enumerate}	
+		\item Random walk
+		\item Pick up food
+		\item Go back home
+		\item Drop food
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}{Further Work}
+    \begin{itemize}
+        \item Duplicated code elimination
+        \item More syntactic sugar (while, else-if, switch statement)
+        \item Relax recursion constraints (allow parameters)
+       	\item Extend variables
+    \end{itemize}
+\end{frame}
+
+\end{document}

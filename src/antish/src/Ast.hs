@@ -36,17 +36,17 @@ data Statement =
   | MoveCall
   deriving (Eq, Data, Typeable, Show)
 
--- | Declaration of a "variable" or a (local) function.
+-- | Declaration of a variable or a (local) function.
 data Binding =
     VarDecl Identifier Expr
   | FunDecl Recursive Identifier [Identifier] StmBlock
   deriving (Eq, Data, Typeable, Show)
 
--- | Tags wether a function is recursive
+-- | Tags whether a function is recursive
 data Recursive = Rec | NonRec
   deriving (Eq, Data, Typeable, Show)
    
--- | Encodes untyped expression
+-- | Encodes untyped expression.
 -- Their type is checked during the compiling phase, whenever they are used. 
 data Expr
   = ConstBool Bool

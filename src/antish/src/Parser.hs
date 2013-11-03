@@ -1,8 +1,7 @@
 -- | This module defines some high-level function for parsing a program
 
 module Parser (
-  parseFile, loadImports, Loader,
-  module Text.Parsec.Error
+  parseFile, loadImports,
   ) where
 
 import Text.Parsec.String

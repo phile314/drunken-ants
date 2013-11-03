@@ -14,12 +14,12 @@ import Text.Parsec.Prim
 builtin :: [GenParser Char st Statement]
 builtin = [pMark, pUnMark, pTurn, pDrop, pPickUp, pMove]
 
--- | @'withExpr' s@ parses "s <expr> ;" and returns the parsed expression.
+-- | @'withExpr' s@ parses /s <expr> ;/ and returns the parsed expression.
 -- Note that @s@ is considered a reserved word.
 withExpr :: String -> GenParser Char st Expr
 withExpr s = reserved s *> pExpr <* semi
 
--- | @'andComma' s@ parses "s ;".
+-- | @'andComma' s@ parses /s ;/.
 -- Note that @s@ is considered a reserved word.
 withComma :: String -> GenParser Char st ()
 withComma s = reserved s <* semi

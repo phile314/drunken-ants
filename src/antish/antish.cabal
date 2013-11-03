@@ -7,6 +7,10 @@ category:            Compiler
 build-type:          Simple
 cabal-version:       >=1.8
 
+extra-source-files:  README
+data-dir:            doc
+data-files:          presentation.tex, presentation.pdf, Grammar.txt
+
 source-repository head
   type:              git
   location:          https://github.com/phile314/drunken-ants/

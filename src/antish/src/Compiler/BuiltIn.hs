@@ -18,10 +18,9 @@ safeFunCall f = do
  
  
 -- | Compiles an unsafe function call. 'onFailure' field from the state is used.
-unsafeFunCall :: (   AntState      -- ^ Where to jump on normal execution
-                  -> AntState      -- ^ Where to jump on failure
-                  -> Instruction)
-                  -> Compile CState [Instruction]
+unsafeFunCall :: 
+  (AntState -> AntState -> Instruction) -- ^ The first argument is where to jump on normal execution, the second is where to jump on failure 
+  -> Compile CState [Instruction]
 unsafeFunCall f = do
   normal      <- goNext 
   failure     <- getOnFailure

@@ -1,0 +1,20 @@
+This package contains the solution for the Ant project of the course AFP (2013).
+The team is composed by:
+  Marco Vassena <m.vassena@students.uu.nl> 
+  Laurens van den Brink <laurensvdbrink@hotmail.com> 
+  Philipp Hausmann <p.hausmann@students.uu.nl>
+
+In order to solve the problem of programming the ants we designed and developed 
+a domain specific language (DSL), which allows to express a strategy for the ants
+in a more convinient way.
+Our compiler (antc), parses the file, matches it against the grammar of the language,
+builds up in the process the correspondent abstract syntax tree, which is then 
+directly compiled to the lower level ant assembly code. 
+Such low level program is written to the output file and can be directly used in the
+simulator.
+
+Structure of the project
+  src           contains the source files for the Parser and the Compiler of the language
+  testsuite     contains testcases used for testing our implementation
+  doc           contains further documentation, like the slides of the presentation given during the last lesson
+  example       Some example ant files written in our language.

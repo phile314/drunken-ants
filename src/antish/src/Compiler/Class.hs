@@ -17,13 +17,13 @@ class Compilable c where
 -- directly compiled, because the value of some variables is not known yet. 
 class Compilable c => PreCompilable c where
   precompile :: c 
-             -> [Identifier]  -- ^ The value of this variable is not known beforehand
+             -> [Identifier]  -- ^ The value of these variables is not known beforehand
              -> ([Expr] -> Compile CState [Instruction]) -- ^ Given their value, @c@ can be compiled
 
 -------------------------------------------------------------------------------
 -- Jumpable Definition
 
--- | Represents some code that requires some jump in the control flow
+-- | Represents some code that requires some jump in the control flow.
 class Compilable c => Jumpable c where
   
   -- | @'compileWithJump' xs j@ compiles the 'Compiable' elements contained in 

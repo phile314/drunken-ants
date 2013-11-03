@@ -1,37 +1,30 @@
---- questions
--- lexer or no lexer?
--- parsinglib or parsec ?
--- happy or alex?
-/*
 --Builtin Functions
 
-mark
-unmark
-pickup
-drop
-turn
-move
+Mark expr
+Unmark expr
+Pickup
+Drop
+Turn expr
+Move
 
 --Builtin Values
-
-
-*/
+Left
+Right
+LeftAhead, RightAhead, Ahead, Here
+Friend, Foe, FriendWithFood, FoeWithFood, Food, Rock, Marker Integer, FoeMarker, Home, FoeHome
 
 --Grammar
-
 Program = stmBlock'
 
-
-stmBlock = stm | "{" stmBlock' "}"
-stmBlock' =
-    stm {NEWLINE stm}
+stmBlock = "{" statements "}"
+statements = stm; {statements}
 
 stm =
     funCall
   | "if" expr "then" stmBlock ["else" stmBlock]
   | "for" [var "in"] expr stmBlock
-  | "try" stmBlock "with" stmBlock ["catch" stmBlock]
-  | "let" binding {COMMA NEWLINE binding} "in" stmBlock
+  | "try" stmBlock "catch" stmBlock
+  | "let" binding {COMMA binding} "in" stmBlock
   | "with" "probability" DOUBLE "do" stmBlock "otherwise" stmBlock
 
 binding =
@@ -49,8 +42,9 @@ bexpr =
     scond sdir
   | expr "&&" expr
   | expr "||" expr
+  | "!" expr
+  | "(" bexpr ")"
 
--- We could also implement this by defining all these values as built-in functions?
 scond =
     Friend
   | Foe
@@ -70,23 +64,11 @@ sdir =
   | RightAhead
 
 expr =
-  | lexpr
   | iexpr
   | bexpr
-  | funCall
-  | "(" expr ")"
-
-
-lexpr =
-    "[" expr ".." expr "]"
-  | "[" expr { "," expr} "]"
-
-
-iexpr =
-    INTEGER
   | var
+  | dir
 
-var =
-    identifier
+iexpr = INTEGER
 
--- identifier: [a-z]([A-z0-9])*
+var = identifier
