@@ -1,7 +1,8 @@
 -- | This module takes care of handling those elements that cannot directly be 
 -- compiled because some information is still missing.
 -- For instance a function declaration cannot be directly compiled because 
--- its parameters instances are not knonw until a function call is provided.
+-- its parameters values are not knonw until they are provide with a 
+-- function call.
 
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
 
@@ -14,7 +15,7 @@ import Compiler.Compile
 import Compiler.Error
 import Ast
 
-instance Compilable c => PreCompilable c where  -- Check: Requires Undecidable instances
+instance Compilable c => PreCompilable c where
   precompile c argNames = \args -> do 
     insertParameters argNames args
     i <- compile c

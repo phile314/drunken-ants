@@ -1,8 +1,8 @@
 -- | Defines the compiling operations for the elements of the Ast
 
 module Compiler.Core (
-    module Compiler.Class
-  ) where
+    compile
+  , compileWithJump ) where
 
 import Ast
 import Assembly (Instruction, AntState) 
@@ -28,7 +28,8 @@ instance (Compilable a) => Compilable [a] where
  
 -- The imported bindings are supposed to be already included in the top level declarations
 instance Compilable Program where
-  compile (Program _ tl) = compile $ Let tl (StmBlock [(FunCall "main" [])])
+  compile (Program _ tl) = compile callMain
+    where callMain = Let tl (StmBlock [(FunCall "main" [])])
 
 instance Compilable StmBlock where
   compile (StmBlock xs) = compile xs
@@ -40,18 +41,18 @@ instance Compilable Statement where
 
   compile (FunCall iden args) =
     let simpleFunCall = lookupFun iden >>= compileFunCall iden args
-        recCall       = catchFunNotInScope args in
-    catchError simpleFunCall recCall
+        recursiveCall = catchFunNotInScope args in
+    catchError simpleFunCall recursiveCall
 
   compile (Let bs b) = insertBindings bs b
 
   compile (For iden xs b) = do
-    let pb x = (precompile b $ maybeToList iden) [x]
+    let pb x = precompile b (maybeToList iden) [x]
     bx <- forM xs pb
     return $ concat bx
 
   compile (WithProb p b1 b2) | isProbability p = do
-    let odds = round $ 1 / p
+    let odds = round (1 / p)
     compileAndReorder (Flip odds) b1 b2
   compile (WithProb p _ _) = throwError $ InvalidProbability p
 
@@ -89,9 +90,7 @@ instance Compilable c => Jumpable [c] where
       cs <- mapM justNext xs'
       cz <- setJumpTo after >> compile z 
       return $ (concat cs) ++ cz
-    where justNext x = do 
-            setJumpTo (+1)
-            compile x
+    where justNext x = setJumpTo (+1) >> compile x
 
 instance Jumpable StmBlock where
   compileWithJump (StmBlock xs) = compileWithJump xs

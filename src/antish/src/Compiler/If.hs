@@ -1,6 +1,6 @@
--- | This module is concerned with the compilation of if-then-else statements
-
 {-# LANGUAGE FlexibleContexts #-}
+
+-- | This module is concerned with the compilation of if-then-else statements
 
 module Compiler.If (compileIf) where
 
@@ -9,7 +9,7 @@ import Compiler.Utility
 import Compiler.Class
 import Compiler.Compile
 
--- | Compiles an arbitrary IfThenElse statement.
+-- | Compiles an arbitrary 'IfThenElse' statement.
 -- The expression involved must be already reduced to basic values.
 compileIf :: (Compilable Statement, Jumpable StmBlock) => 
              Expr       -- ^ A reduced Boolean expression

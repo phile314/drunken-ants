@@ -1,3 +1,5 @@
+-- | This module provides primitives for compiling function calls.
+
 module Compiler.Function (
     catchFunNotInScope
   , compileFunCall ) where
@@ -6,7 +8,7 @@ import Ast
 import Compiler.Compile
 import Compiler.Error
 
--- | Handler for FunNotInScope error.
+-- | Handler for 'FunNotInScope' error.
 -- A recursive function might be compiled right now, thus the function is not yet in scope, but 
 -- the recursive call has already been tracked. If this is the case a jump back to this point
 -- is generated, otherwise the error is propagated.
@@ -39,12 +41,9 @@ compileFunCall iden args (Rec, nargs, body) = do
 compileFunCall iden args (NonRec, nargs, body) = checkArgs iden nargs args >> body args
 
 
--- | @'checkArgs iden nargs args'@, throws an error if the number of arguments expected by the function
--- (@nargs@) does not match the number of arguments given (@args@).
+-- | @'checkArgs iden nargs args'@, throws an error if the number of arguments 
+-- expected by the function (@nargs@) does not match the number of arguments 
+-- given (@args@).
 checkArgs :: Identifier -> Int -> [Expr] -> Compile CState ()
-checkArgs iden nargs args = do
-  let given = length args
-      wrongNum = WrongNumParam iden given nargs
-  if nargs /= given
-    then throwError wrongNum 
-    else return ()
+checkArgs iden nargs args | nargs == (length args) = return ()
+checkArgs iden nargs args = throwError $ WrongNumParam iden (length args) nargs

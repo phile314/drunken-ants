@@ -1,6 +1,6 @@
--- | Provides utility function related to 'Compile' and 'compile'.
-
 {-# LANGUAGE FlexibleContexts #-}
+
+-- | Provides utility function related to 'Compile' and 'compile'.
 
 module Compiler.Utility (
     compileAndReorder

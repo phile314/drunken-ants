@@ -47,4 +47,4 @@ instance Show CError where
           why = "\nIts body is\n" ++ drawAst b
 
   show (InvalidRecFun iden xs) = iden ++ ": invalid recursive function declaration, " ++ what
-    where what = "no parameters can be passed, (" ++ show (length xs) ++ " given)\n"
+    where what = "no parameters can be passed, (" ++ show (length xs) ++ " given)"

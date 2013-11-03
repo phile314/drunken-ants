@@ -28,7 +28,7 @@ class Compilable c => Jumpable c where
   
   -- | @'compileWithJump' xs j@ compiles the 'Compiable' elements contained in 
   -- @xs@, so that on normal execution they are executed sequentially and after
-  -- that the control flow jumpt to @j@.
+  -- that the control flow jumps to @j@.
   compileWithJump :: c                          -- ^ What is going to be compied
                   -> (AntState -> AntState)     -- ^ Where to jump after this piece of code
                   -> Compile CState [Instruction]

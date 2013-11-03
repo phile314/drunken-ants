@@ -29,7 +29,7 @@ unsafeFunCall f = do
 
 
 -- | Performs the compilation only if the given 'Expr' is a valid 'MarkerNumber',
--- otherwise it throws a 'CError'.
+-- otherwise it throws the 'CError' 'InvalidMarkerNumber'.
 compileWithMarker :: (MarkerNumber -> Compile CState [Instruction])
                   -> Expr
                   -> Compile CState [Instruction]

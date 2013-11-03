@@ -18,12 +18,8 @@ eval EBool (Or  c1 c2)       = liftM2 Or  (eval EBool c1) (eval EBool c2)
 eval EBool (Not c)           = liftM Not (eval EBool c)
 eval EInt  c@(ConstInt _)    = return c
 eval EDir  c@(CDir _)        = return c
-eval t (VarAccess iden)      = do
-  e <- lookupVar iden
-  t' <- typeOf e
-  if t /= t' then throwError $ WrongType (VarAccess iden) t' t
-    else eval t e            -- TODO use catchError
-
+eval t v@(VarAccess iden)    = catchError (lookupVar iden >>= eval t) h
+  where h (WrongType _ t' _) = throwError $ WrongType v t' t
 eval t e = do
   actual <- typeOf e 
   throwError $ WrongType e actual t

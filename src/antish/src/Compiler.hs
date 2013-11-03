@@ -15,4 +15,3 @@ import Compiler.Error
 -- If the program is not correct a 'CError' is returned.
 compile :: Program -> Either CError [Instruction]
 compile p = runCompile (CO.compile p) empty >>= return . fst
-  
