@@ -5,23 +5,34 @@ module Main where
 import Parser
 import System.Environment
 import Ast
-import Options.Applicative
 import Control.Monad.Error
 import Control.Monad.Identity
 import Compiler
 import Code
+import Loader
+import Options.Applicative
+import System.IO
+import System.Exit
 import Tree
 
 -- | Accepted command line parameters.
 data Options = Options
-  { showAST :: Bool
-  , srcFile :: FilePath }
+  { showAST :: Bool       -- ^ (Debugging) Show the abstract syntax tree
+  , srcFile :: FilePath   -- ^ The input file
+  , outFile :: FilePath   -- ^ The output file
+  }
 
 
 options :: Parser Options
 options = Options
   <$> switch ( long "show-ast" <> short 's' <> help "Show generated AST Tree." )
-  <*> argument str ( metavar "SRC" )
+  <*> argument str (metavar "<file>")
+  <*> strOption (long "output" <> short 'o' <> metavar "<file>") 
+
+-- | Parser for the command line options
+pOpts :: ParserInfo Options
+pOpts = info (helper <*> options)
+      (fullDesc <> progDesc "Compiles High-level Ant Code to Low-level Ant Code.")
 
 -- | Parses the file and load the imported modules if any.
 -- If the program (and the modules) are syntactically correct
@@ -33,30 +44,23 @@ loadFiles srcFile = do
   res <- loadImports imports
   return $ Program imports (res ++ top)
 
-run :: Options -> IO ()
+-- | Performs the parsing and the compilation of the input file
+-- On failure a 'LError' is raised, otherwise both the program's 
+-- abstract syntax tree and the assembly code is returned.
+run :: Options -> Loader (Program, [Instruction])
 run opts = do
-  p <- runErrorT $ loadFiles (srcFile opts)
-
-  p' <- case p of
-            (Left e) -> error (show e)
-            (Right k) -> do
-              when (showAST opts) $ putStrLn (drawAst k)
-              return k
-
-  p'' <- case (compile p') of
-        (Left e) -> error (show e)
-        (Right k) -> return k
- 
-  putStr $ toCode p''
-
-  return ()
+  ast <- loadFiles (srcFile opts)
+  case compile ast of
+    Left e -> throwError $ C e
+    Right p -> return (ast,p)
 
 -- | The entry point for the compiler.
 main :: IO ()
 main = do
-  options <- execParser opts
-  run options
-  where
-    opts = info (helper <*> options)
-      ( fullDesc <> progDesc "Compiles High-level Ant Code to Low-level Ant Code.")
-
+  options <- execParser pOpts
+  r <- runErrorT $ run options
+  case r of
+    Left e -> hPutStrLn stderr (show e) >> exitFailure
+    Right (ast, p) -> do
+      when (showAST options) $ putStrLn (drawAst ast)
+      writeFile (outFile options) $ toCode p

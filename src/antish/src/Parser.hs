@@ -11,17 +11,13 @@ import Text.Parsec.Error
 import Parser.Program
 import Control.Monad
 import Control.Monad.Error
+import Loader
 
 -- | @'parseFile' filepath@ parses the given @file@ and match it against the
 -- language grammar.
 parseFile :: FilePath -> Loader Program
 parseFile f = do 
-  liftIO (parseFromFile pProgram f) >>= either throwError return
-
-type Loader = ErrorT ParseError IO
-
-instance Error ParseError where
-  strMsg = undefined
+  liftIO (parseFromFile pProgram f) >>= either (throwError . P) return
 
 -- | Recursively parsess all the modules imported and returns
 -- the ordered list of bindings.
