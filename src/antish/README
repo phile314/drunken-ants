@@ -1,8 +1,8 @@
 This package contains the solution for the Ant project of the course AFP (2013).
 The team is composed by:
-  Marco Vassena <m.vassena@students.uu.nl> 
-  Laurens van den Brink <laurensvdbrink@hotmail.com> 
-  Philipp Hausmann <p.hausmann@students.uu.nl>
+  Marco Vassena         <m.vassena@students.uu.nl>      4110161
+  Laurens van den Brink <laurensvdbrink@hotmail.com>    4022831
+  Philipp Hausmann      <p.hausmann@students.uu.nl>     4003373
 
 In order to solve the problem of programming the ants we designed and developed 
 a domain specific language (DSL), which allows to express a strategy for the ants
