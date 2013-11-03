@@ -1,6 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-
 -- | This module contains the datatypes that define the Abstract Syntax Tree of the language 
 
 module Ast (
@@ -8,7 +5,6 @@ module Ast (
   , module Ast ) where
 
 import Assembly
-import Data.Data
 
 type Identifier = String
 
@@ -16,10 +12,10 @@ type Identifier = String
 type Import = String
 
 data Program = Program [Import] [Binding]
-  deriving (Eq, Data, Typeable, Show)
+  deriving (Eq, Show)
 
 data StmBlock = StmBlock [Statement]
-  deriving (Eq, Data, Typeable, Show)
+  deriving (Eq, Show)
 
 data Statement =
     FunCall Identifier [Expr]
@@ -34,17 +30,17 @@ data Statement =
   | DropCall
   | PickUpCall
   | MoveCall
-  deriving (Eq, Data, Typeable, Show)
+  deriving (Eq, Show)
 
 -- | Declaration of a variable or a (local) function.
 data Binding =
     VarDecl Identifier Expr
   | FunDecl Recursive Identifier [Identifier] StmBlock
-  deriving (Eq, Data, Typeable, Show)
+  deriving (Eq, Show)
 
 -- | Tags whether a function is recursive
 data Recursive = Rec | NonRec
-  deriving (Eq, Data, Typeable, Show)
+  deriving (Eq, Show)
    
 -- | Encodes untyped expression.
 -- Their type is checked during the compiling phase, whenever they are used. 
@@ -57,7 +53,7 @@ data Expr
   | ConstInt Int
   | CDir LeftOrRight
   | VarAccess Identifier
-  deriving (Eq, Show, Data, Typeable)
+  deriving (Eq, Show)
 
 -- | Encodes the type of an expression
 data EType = EBool | EInt | EDir
