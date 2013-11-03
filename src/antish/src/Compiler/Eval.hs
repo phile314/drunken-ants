@@ -20,6 +20,7 @@ eval EInt  c@(ConstInt _)    = return c
 eval EDir  c@(CDir _)        = return c
 eval t v@(VarAccess iden)    = catchError (lookupVar iden >>= eval t) h
   where h (WrongType _ t' _) = throwError $ WrongType v t' t
+        h e                  = throwError e
 eval t e = do
   actual <- typeOf e 
   throwError $ WrongType e actual t
