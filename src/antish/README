@@ -16,5 +16,5 @@ simulator.
 Structure of the project
   src           contains the source files for the Parser and the Compiler of the language
   testsuite     contains testcases used for testing our implementation
-  doc           contains further documentation, like the slides of the presentation given during the last lesson
-  example       Some example ant files written in our language.
+  doc           contains further documentation, like the slides of the presentation given during the last lesson and includes some examples file written in antish
+

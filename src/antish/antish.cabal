@@ -8,16 +8,17 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 extra-source-files:  README
+
 data-dir:            doc
-data-files:          presentation.tex, presentation.pdf, Grammar.txt
+data-files:          presentation.tex, presentation.pdf, Grammar.txt, example.tar
 
 source-repository head
   type:              git
   location:          https://github.com/phile314/drunken-ants/
 
 library
-  exposed-modules:     Ast, Parser.Expr, Parser.Program, Parser, Compiler.Compile, Compiler.Class, Compiler
-  other-modules:       Assembly, Compiler.Error, Compiler.Eval, Compiler.Precompile, Code, Tree
+  exposed-modules:     Parser, Compiler
+  other-modules:       Ast, Assembly, Code, Tree, Parser.Program, Parser.LangDef, Parser.Expr, Parser.Block, Parser.Builtin, Compiler.Compile, Compiler.Class, Compiler.Error, Compiler.Eval, Compiler.Precompile, Compiler.BuiltIn, Compiler.Core, Compiler.Function, Compiler.If, Compiler.Precompile, Compiler.Scope, Compiler.TailRecursion, Compiler.Utility, Loader
   build-depends:       base >=4.5, parsec ==3.1.*, mtl ==2.1.*, containers >=0.4
   hs-source-dirs:      src
 
@@ -30,11 +31,13 @@ executable antc
 test-suite  parser-test
   type:             exitcode-stdio-1.0
   main-is:          BoolTest.hs
+  other-modules:    BoolCombinators
   build-depends:    base >=4.5, HUnit ==1.2.*, parsec ==3.1.*, QuickCheck >=2.5, containers >=0.4, antish
   hs-source-dirs:   testsuite/parser, src/
 
 test-suite compiler-test
   type:             exitcode-stdio-1.0
   main-is:          CompilerTest.hs
+  other-modules:    ErrorTest ForTest,  IfThenElseTest,  ProbTest,  RecursiveTest,  ScopeTest,  TryTest,  Util
   build-depends:    base >=4.5, HUnit ==1.2.*, mtl ==2.1.*, containers >=0.4, antish
   hs-source-dirs:   testsuite/compiler, src/

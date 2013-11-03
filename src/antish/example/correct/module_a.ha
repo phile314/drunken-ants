@@ -1,4 +1,0 @@
-
-dummy = {
-    Turn Left;
-}
